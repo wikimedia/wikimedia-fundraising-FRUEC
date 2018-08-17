@@ -1,0 +1,46 @@
+backends:
+  - fruec
+  - legacy
+
+db_config:
+  'fruec':
+    'database': 'fr_user_event_consumer_testing'
+    'user': 'fr_user'
+    'password': 'fr_password'
+    'host': 'localhost'
+  legacy:
+    'database': 'bannerstats'
+    'user': 'banner_user'
+    'password': 'banner_password'
+    'host': 'localhost'
+
+db_tables:
+  'banners': 'bannerimpressions'
+  'lp': 'landingpagesimpressions'
+
+shared_backend_fields:
+  - 'campaign'
+  - 'banner'
+  - 'project_id'
+  - 'language_id'
+  - 'country_id'
+shared_aggregate_sum_field: 'count'
+
+output_csv_directory: './tests/'
+output_csv_filename: 'backend_stats.csv'
+output_csv_headers:
+  - 'backend'
+  - 'rows'
+  - 'first'
+  - 'last'
+  - 'campaign'
+  - 'banner'
+  - 'project'
+  - 'language_code'
+  - 'country_code'
+  - 'total count'
+
+
+
+
+

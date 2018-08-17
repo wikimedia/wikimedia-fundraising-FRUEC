@@ -18,3 +18,4 @@ drop_tables.sql
 # Don't ignore this file
 !.gitignore
 
+env/
