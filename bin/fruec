@@ -4,8 +4,8 @@ import sys
 import argparse
 from datetime import datetime
 
-from fr_user_event_consumer import (
-    config, setup_logging, central_notice_consumer_controller )
+from fr_user_event_consumer import config, setup_logging, controller
+from fr_user_event_consumer.event_type import EventType
 
 # Entry point
 if __name__ == '__main__':
@@ -32,7 +32,8 @@ if __name__ == '__main__':
     # command, so that they may be placed after the command. Here we just set
     # some variables for that common setup.
     event_type_kwargs = {
-        'help': 'Type of event to consume. Options are: centralnotice, landingpages.',
+        'help': 'Type of event.',
+        'choices': [ 'centralnotice', 'landingpage' ],
         'required': True
     }
 
@@ -53,7 +54,7 @@ if __name__ == '__main__':
     commands = parser.add_subparsers( title = 'COMMANDS', dest = 'command' )
     commands.required = True
 
-    # The main command, consume log files
+    # Set up the main command, consume log files
     consume_parser = commands.add_parser(
         'consume',
         help = 'Consume events from log files.'
@@ -73,8 +74,9 @@ if __name__ == '__main__':
         '--file-glob',
         help =
             """Filename or glob to select log file(s) with events to consume. If not
-            specified, defaults to central_notice_filename_glob set in the configuration
-            file. Filenames ending in '.gz' are assumed to be compressed with gzip."""
+            specified, defaults to filename glob set for this event type in the
+            configuration file. Filenames ending in '.gz' are assumed to be compressed
+            with gzip."""
     )
 
     # The two options to indicate the beginning of the time window for files to select
@@ -111,7 +113,7 @@ if __name__ == '__main__':
     consume_parser.add_argument( '--config', **config_kwargs )
     consume_parser.add_argument( '--debug', **debug_kwargs )
 
-    # Purge incomplete command
+    # Set up the purge-incomplete command
     purge_parser = commands.add_parser(
         'purge-incomplete',
         help =
@@ -127,18 +129,24 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # Process arguments available across all commands
-
-    # Load config
+    # Do stuff with options available to all commands
     config.filename = args.config # Will be None if the command-line option is not set
     cfg = config.get()
 
     setup_logging( args.debug )
 
+    if args.event_type == 'centralnotice':
+        event_type = EventType.CENTRAL_NOTICE
+    elif args.event_type == 'landingpage':
+        event_type = EventType.LANDING_PAGE
+    else:
+        raise ValueError( 'Invalid event type: {}'.format( args.event_type ) )
+
     # Consume command
     if args.command == 'consume':
-        # Parse timestamp command line arguments. This should raise an error if they're not in
-        # the right format.
+
+        # Parse timestamp command-line arguments. This should raise an error if they're
+        # not in the right format.
         timestamp_format_in_fn = cfg[ 'timestamp_format_in_filenames' ]
 
         if args.from_timestamp:
@@ -151,15 +159,35 @@ if __name__ == '__main__':
         else:
             to_time = None
 
-        stats = central_notice_consumer_controller.consume_events(
+        # Set directory and file_glob as per command-line arguments and config
+        if args.directory:
+            directory = args.directory
+        elif event_type == EventType.CENTRAL_NOTICE:
+            directory = cfg[ 'central_notice_directory' ]
+        elif event_type == EventType.LANDING_PAGE:
+            directory = cfg[ 'landing_page_directory' ]
+
+        if args.file_glob:
+            file_glob = args.file_glob
+        elif event_type == EventType.CENTRAL_NOTICE:
+            file_glob = cfg[ 'central_notice_file_glob' ]
+        elif event_type == EventType.LANDING_PAGE:
+            file_glob = cfg[ 'landing_page_file_glob' ]
+
+        # Call the controller
+        # Event-type-specific controller arguments are just ignored if not needed.
+        stats = controller.consume_events(
+            event_type = event_type,
             db_settings = cfg[ 'db_settings' ],
             timestamp_format_in_filenames = timestamp_format_in_fn,
             extract_timestamp_regex = cfg[ 'extract_timestamp_regex' ],
             extract_sample_rate_regex = cfg[ 'extract_sample_rate_regex' ],
-            directory = args.directory or cfg[ 'central_notice_directory' ],
-            file_glob = args.file_glob or cfg[ 'central_notice_file_glob' ],
+            directory = directory,
+            file_glob = file_glob,
+            default_str_validation_regex = cfg[ 'default_str_validation_regex' ],
             detail_languages = cfg[ 'central_notice_detail_languages' ],
             detail_projects_regex = cfg[ 'central_notice_detail_projects_regex' ],
+            lp_max_batch = cfg[ 'landing_page_ingress_max_batch_size' ],
             from_latest = args.from_latest,
             from_time = from_time,
             to_time = to_time
@@ -169,7 +197,7 @@ if __name__ == '__main__':
         print( 'Files selected by options, but skipped due to previous processing: {}'
             .format( stats[ 'skipped_files' ] ) )
 
-        print( 'Events aggregated: {}'.format( stats[ 'consumed_events' ] ) )
+        print( 'Events consumed: {}'.format( stats[ 'consumed_events' ] ) )
         print( 'Events ignored: {}'.format( stats[ 'ignored_events' ] ) )
         print( 'Invalid events: {}'.format( stats[ 'invalid_lines' ] ) )
 
@@ -184,7 +212,8 @@ if __name__ == '__main__':
         if confirm.strip() not in ( 'Y', 'y' ):
             sys.exit()
 
-        central_notice_consumer_controller.purge_incomplete(
+        controller.purge_incomplete(
+            event_type = event_type,
             db_settings = cfg[ 'db_settings' ]
         )
 

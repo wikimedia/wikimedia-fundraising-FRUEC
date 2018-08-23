@@ -12,7 +12,6 @@ setup(
         'mysql-connector-python >= 1.2.3'
     ],
     scripts = [
-       'bin/consume_central_notice_events',
-       'bin/consume_landing_page_events'
+       'bin/fruec'
    ]
 )

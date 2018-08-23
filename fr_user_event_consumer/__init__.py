@@ -4,6 +4,7 @@ DEFAULT_CONFIG_FILENAMES = [ './config.yaml', '/etc/fr_user_events_consumer/conf
 
 LOG_FORMAT = '{levelname} {msg} ({filename} line {lineno})'
 
+
 def setup_logging( debug ):
     logging.basicConfig( format = LOG_FORMAT, style = '{' )
 

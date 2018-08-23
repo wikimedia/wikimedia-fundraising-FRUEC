@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 import mysql.connector as mariadb
 
-from fr_user_event_consumer.central_notice_event import CentralNoticeEvent
+from fr_user_event_consumer.cn_event import CNEvent
 from fr_user_event_consumer.db import project_mapper, language_mapper, country_mapper
 from fr_user_event_consumer import db
 
@@ -43,9 +43,11 @@ DELETE_DATA_FORM_FILES_WITH_PROCESSING_STATUS_SQL = (
     '  files.status  = \'processing\''
 )
 
-# Strings for languages and projects not separated out, from legacy
-_OTHER_PROJECT_IDENTIFIER = 'other_project'
+# Strings for languages and projects not separated out, from legacy.
+# Following legacy, this is different from the 'default' language for LandingPages,
+# which fall back to 'en' when no language is provided.
 _OTHER_LANGUAGE_CODE = 'other'
+_OTHER_PROJECT_IDENTIFIER = 'other_project'
 
 _other_project = None
 _other_language = None
@@ -53,12 +55,12 @@ _other_language = None
 _logger = logging.getLogger( __name__ )
 
 
-def new_unsaved( json_string ):
-    return CentralNoticeEvent( json_string )
+def new_unsaved( json_string, default_str_validation_regex ):
+    return CNEvent( json_string, default_str_validation_regex )
 
 
-def new_cn_aggregation_step( detail_languages, detail_projects_regex, file ):
-    return CNAggregationStep( detail_languages, detail_projects_regex, file )
+def new_cn_aggregation_step( file, detail_languages, detail_projects_regex ):
+    return CNAggregationStep( file, detail_languages, detail_projects_regex )
 
 
 def delete_with_processing_status():
@@ -102,7 +104,7 @@ def _data_cell_id( time, banner, campaign, project, language, country ):
 
 class CNAggregationStep:
 
-    def __init__( self, detail_languages, detail_projects_regex, file ):
+    def __init__( self, file,  detail_languages, detail_projects_regex ):
         self._detail_languages = detail_languages
         self._detail_projects_pattern = re.compile( detail_projects_regex )
         self._sample_rate_multiplier = 100 / file.sample_rate
@@ -141,7 +143,7 @@ class CNAggregationStep:
 
 
     def save( self ):
-        _logger.debug( 'Aggregating {} cells'.format( len( self._data ) ) )
+        _logger.debug( 'Aggregating {} centralnotice data cells'.format( len( self._data ) ) )
 
         cursor = db.connection.cursor()
 

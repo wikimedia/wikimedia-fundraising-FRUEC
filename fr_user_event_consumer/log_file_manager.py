@@ -59,7 +59,13 @@ def file_infos( timestamp_format, extract_timetamp_regex, directory, file_glob,
 
 
 def sample_rate( filename, extract_sample_rate_regex ):
-    sr = int( re.search( extract_sample_rate_regex, filename ).group( 0 ) )
+    m = re.search( extract_sample_rate_regex, filename )
+
+    if not m:
+        raise RuntimeError( 'Couldn\'t extract sample rate from filename: {}'.
+            format( filename ) )
+
+    sr = int( m.group( 0 ) )
 
     if ( sr <= 0 ) or ( sr > 100 ):
         raise ValueError( 'Invalid sample rate {} for {}.'.format( sr, filename ) )

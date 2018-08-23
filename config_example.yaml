@@ -12,14 +12,14 @@ landing_page_directory: ''
 
 # Globs to select files of the specified type. Should select for any timestamp and, for
 # CentralNotice events, sample rate.
-central_notice_file_glob: 'centralnotice-impressions-*'
-landing_page_file_glob: 'landingpage-impressions-*'
+central_notice_file_glob: 'centralnotice-impressions*'
+landing_page_file_glob: 'landingpage-impressions*'
 
 # Format for timestamp in filenames (as output by datetime.strptime())
 timestamp_format_in_filenames: '%Y%m%d-%H%M%S'
 
 # Regular expression to extract timestamps from log filenames.
-extract_timestamp_regex: '(?<=-)\d+-\d+(?=\D)'
+extract_timestamp_regex: '(?<=[.-])\d+-\d+(?=\D)'
 
 # Regular expression to extract sample rate from log filenames (only CentralNotice events)
 extract_sample_rate_regex: '(?<=sampled)\d+(?=\D)'
@@ -37,3 +37,7 @@ central_notice_detail_projects_regex: '.*wiki$'
 
 # Maximum number of landing page events to write in a single database query.
 landing_page_ingress_max_batch_size: 1500
+
+# Default regular expression for validating event fields; used for string fields that
+# that don't have more specific requirements.
+default_str_validation_regex: '^[\w_\d\-.@$%+&\|\(\)/: ]*$'
