@@ -1,9 +1,12 @@
 import re
 
+_IDENTIFIER_LIMIT = 128
+
 validation_pattern = re.compile( '^[a-z0-9\-_\.]+$' )
 
 def is_valid_identifier( identifier ):
-    return bool( validation_pattern.match( identifier ) )
+    return ( ( len( identifier ) <= _IDENTIFIER_LIMIT ) and
+        bool( validation_pattern.match( identifier ) ) )
 
 
 class Project:

@@ -4,6 +4,11 @@ import logging
 from fr_user_event_consumer import project, language
 from fr_user_event_consumer.event import Event
 
+_STR_FIELD_LIMITS = {
+    'banner': 255,
+    'campaign': 255
+}
+
 validate_banner_pattern = re.compile( '^[A-Za-z0-9_]+$' ) # Coordinate with CentralNotice
 
 _logger = logging.getLogger( __name__ )
@@ -55,3 +60,7 @@ class CNEvent( Event ):
             return
 
         self.valid = True
+
+        # Following legacy, events are valid and will still be consumed if one or more
+        # values are too long
+        self._truncate_fields( _STR_FIELD_LIMITS )

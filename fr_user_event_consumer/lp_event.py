@@ -30,9 +30,20 @@ _LP_COMPONENT_FIELDS = [
     'form_template',
     'form_countryspecific'
 ]
+
 _LP_COMPONENT_FIELD_DEFAULT = 'default'
 _LP_COMPONENT_FIELD_INTERAL_SEPARATOR = '-'
 _LP_COMPONENT_FIELD_JOIN_STR = '~'
+
+_STR_FIELD_LIMITS = {
+    'utm_source': 255,
+    'utm_campaign': 255,
+    'utm_medium': 255,
+    'utm_key': 128,
+    'landingpage': 255,
+    'contact_id': 255,
+    'link_id': 128
+}
 
 _logger = logging.getLogger( __name__ )
 
@@ -94,6 +105,10 @@ class LPEvent( Event ):
                 _LP_COMPONENT_FIELD_JOIN_STR )
 
         self.valid = True
+
+        # Following legacy, events are valid and will still be consumed if one or more
+        # values are too long
+        self._truncate_fields( _STR_FIELD_LIMITS )
 
 
     def _set_and_default_validate_str_fields( self, field_names ):

@@ -26,6 +26,8 @@ class Event:
             self.valid = False
             return
 
+        self._event_uuid = self._data[ 'uuid' ]
+
         self.country_code = self._data[ 'event' ].get( 'country' )
         if self.country_code and not country.is_valid_country_code( self.country_code ):
             _logger.debug( 'Invalid country code: {}'.format( self.country_code ) )
@@ -44,3 +46,12 @@ class Event:
 
     def _is_str_default_valid( self, s ):
         return bool( self._default_str_validation_pattern.match( s ) )
+
+
+    def _truncate_fields( self, field_names_and_limits ):
+        for field_name, limit in field_names_and_limits.items():
+            val = getattr( self, field_name )
+            if ( val is not None ) and len( val ) > limit:
+                _logger.warn( 'Field {} to long in event {}'.format(
+                    field_name, self._event_uuid ) )
+                setattr( self, field_name, val[ :limit ] )

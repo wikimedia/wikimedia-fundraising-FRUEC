@@ -1,5 +1,9 @@
 from enum import Enum
 
+_FILENAME_LIMIT = 128
+_DIRECTORY_LIMIT = 256
+
+
 class LogFileStatus( Enum ):
     PROCESSING = 'processing'
     CONSUMED = 'consumed'
@@ -19,6 +23,13 @@ class LogFile:
         ignored_events = None,
         invalid_lines = None
     ):
+
+        if len( filename ) > _FILENAME_LIMIT:
+            raise ValueError( 'Filename too long: {}'.format( filename ) )
+
+        if len( directory ) > _DIRECTORY_LIMIT:
+            raise ValueError( 'Directory too long: {}'.format( directory ) )
+
         self.filename = filename
         self.directory = directory
         self.time = time
