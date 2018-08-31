@@ -149,15 +149,19 @@ if __name__ == '__main__':
         # not in the right format.
         timestamp_format_in_fn = cfg[ 'timestamp_format_in_filenames' ]
 
-        if args.from_timestamp:
-            from_time = datetime.strptime( args.from_timestamp, timestamp_format_in_fn )
+        from_timestamp = args.from_timestamp
+        if from_timestamp:
+            from_time = datetime.strptime( from_timestamp, timestamp_format_in_fn )
         else:
             from_time = None
 
-        if args.to_timestamp:
-            to_time = datetime.strptime( args.to_timestamp, timestamp_format_in_fn )
+        to_timestamp = args.to_timestamp
+        if to_timestamp:
+            to_time = datetime.strptime( to_timestamp, timestamp_format_in_fn )
         else:
             to_time = None
+
+        from_latest = args.from_latest
 
         # Set directory and file_glob as per command-line arguments and config
         if args.directory:
@@ -174,6 +178,17 @@ if __name__ == '__main__':
         elif event_type == EventType.LANDING_PAGE:
             file_glob = cfg[ 'landing_page_file_glob' ]
 
+        # Print a friendly confirmation message
+        if from_latest:
+            from_msg = 'from latest consumed'
+        else:
+            from_msg = 'from ' + from_timestamp if from_timestamp else 'no start time'
+
+        to_msg = 'to ' + to_timestamp if to_timestamp else 'no end time'
+
+        print( 'Consuming {} events in files matching \'{}\' in \'{}\' directory, {}, {}.'
+            .format( event_type.output_name, file_glob, directory, from_msg, to_msg ) )
+
         # Call the controller
         # Event-type-specific controller arguments are just ignored if not needed.
         stats = controller.consume_events(
@@ -188,7 +203,7 @@ if __name__ == '__main__':
             detail_languages = cfg[ 'central_notice_detail_languages' ],
             detail_projects_regex = cfg[ 'central_notice_detail_projects_regex' ],
             lp_max_batch = cfg[ 'landing_page_ingress_max_batch_size' ],
-            from_latest = args.from_latest,
+            from_latest = from_latest,
             from_time = from_time,
             to_time = to_time
         )
@@ -198,9 +213,9 @@ if __name__ == '__main__':
 
     elif args.command == 'purge-incomplete':
         print(
-            """Purge database of events from files in a state of incomplete processing,
-            and purge records of those files. WARNING: Back up database before
-            executing this command."""
+            ( 'Purge database of {} events from files in a state of incomplete processing, '
+            'and purge records of those files. WARNING: Back up database before '
+            'executing this command.' ).format( event_type.output_name )
         )
 
         confirm = input( 'Proceed? [y/N] ' )
