@@ -2,6 +2,7 @@ import logging
 
 from fr_user_event_consumer.log_file import LogFileStatus
 from fr_user_event_consumer.event_type import EventType
+from fr_user_event_consumer.stats import StatCollection
 from fr_user_event_consumer import log_file_manager, db, event
 
 _CONSUMIBLE_LP_PROJECT_IDENTIFIERS = [ 'donatewiki' ]
@@ -28,8 +29,6 @@ def consume_events(
 
     if from_latest and from_time:
         raise ValueError( 'Can\'t set both from_latest and from_time.' )
-
-    stats = {}
 
     # Open db connection
     db.connect( **db_settings )
@@ -60,11 +59,13 @@ def consume_events(
         to_time = to_time
     )
 
-    stats[ 'consumed_files' ] = 0
-    stats[ 'skipped_files' ] = 0
-    stats[ 'consumed_events' ] = 0
-    stats[ 'ignored_events' ] = 0
-    stats[ 'invalid_lines' ] = 0
+    stats = StatCollection()
+    stats.new_stat( 'consumed_files', 'Files consumed' )
+    stats.new_stat( 'skipped_files',
+        'Files selected by options, but skipped due to previous processing' )
+    stats.new_stat( 'consumed_events', 'Events consumed' )
+    stats.new_stat( 'ignored_events', 'Events ignored' )
+    stats.new_stat( 'invalid_events', 'Invalid events' )
 
     for file_info in file_infos:
         filename = file_info[ 'filename' ]
@@ -73,7 +74,7 @@ def consume_events(
         # Skip any files already known to the db
         if db.log_file_mapper.known( filename ):
             _logger.debug( 'Skipping already processed {}.'.format( filename ) )
-            stats[ 'skipped_files' ] += 1
+            stats.increment( 'skipped_files', 1 )
             continue
 
         _logger.debug( 'Processing {}.'.format( filename ) )
@@ -107,10 +108,10 @@ def consume_events(
         file.status = LogFileStatus.CONSUMED
         db.log_file_mapper.save( file )
 
-        stats[ 'consumed_files' ] += 1
-        stats[ 'consumed_events' ] += file.consumed_events
-        stats[ 'ignored_events' ] += file.ignored_events
-        stats[ 'invalid_lines' ] += file.invalid_lines
+        stats.increment( 'consumed_files', 1 )
+        stats.increment( 'consumed_events', file.consumed_events )
+        stats.increment( 'ignored_events',  file.ignored_events )
+        stats.increment( 'invalid_events', file.invalid_events )
 
     db.close()
     return stats
@@ -138,7 +139,7 @@ def _process_cn_file( file, detail_languages, detail_projects_regex,
         # Count events consumed, events ignored and invalid lines for this file
         file.consumed_events = 0
         file.ignored_events = 0
-        file.invalid_lines = 0
+        file.invalid_events = 0
 
         # Start aggregation step (to aggregate data per-file)
         aggregation_step = db.cn_event_aggregator.new_cn_aggregation_step(
@@ -154,7 +155,7 @@ def _process_cn_file( file, detail_languages, detail_projects_regex,
             # Events arrive via a public URL. Some validation happens before they
             # get here, but we do a bit more.
             if not event.valid:
-                file.invalid_lines += 1
+                file.invalid_events += 1
                 _logger.debug( 'Invalid data on line {} of {}: {}'.format(
                     line_no, file.filename, line ) )
 
@@ -177,7 +178,7 @@ def _process_lp_file( file, lp_max_batch, default_str_validation_regex ):
     # Count events consumed, events ignored and invalid lines for this file
     file.consumed_events = 0
     file.ignored_events = 0
-    file.invalid_lines = 0
+    file.invalid_events = 0
 
     write_step = db.lp_event_writer.new_lp_write_step( file, lp_max_batch )
 
@@ -188,7 +189,7 @@ def _process_lp_file( file, lp_max_batch, default_str_validation_regex ):
         # Events arrive via a public URL. Some validation happens before they
         # get here, but we do a bit more.
         if not event.valid:
-            file.invalid_lines += 1
+            file.invalid_events += 1
             _logger.debug( 'Invalid data on line {} of {}: {}'.format(
                 line_no, file.filename, line ) )
 

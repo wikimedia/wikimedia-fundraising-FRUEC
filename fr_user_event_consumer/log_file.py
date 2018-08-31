@@ -21,7 +21,7 @@ class LogFile:
         status = None,
         consumed_events = None,
         ignored_events = None,
-        invalid_lines = None
+        invalid_events = None
     ):
 
         if len( filename ) > _FILENAME_LIMIT:
@@ -38,6 +38,6 @@ class LogFile:
         self.status = status
         self.consumed_events = consumed_events
         self.ignored_events = ignored_events
-        self.invalid_lines = invalid_lines
+        self.invalid_events = invalid_events
 
         self.db_id = None

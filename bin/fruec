@@ -193,13 +193,8 @@ if __name__ == '__main__':
             to_time = to_time
         )
 
-        print( 'Files consumed: {}'.format( stats[ 'consumed_files' ] ) )
-        print( 'Files selected by options, but skipped due to previous processing: {}'
-            .format( stats[ 'skipped_files' ] ) )
-
-        print( 'Events consumed: {}'.format( stats[ 'consumed_events' ] ) )
-        print( 'Events ignored: {}'.format( stats[ 'ignored_events' ] ) )
-        print( 'Invalid events: {}'.format( stats[ 'invalid_lines' ] ) )
+        # Output stats with description
+        print( '\n'.join( stats.describe() ) )
 
     elif args.command == 'purge-incomplete':
         print(

@@ -15,7 +15,7 @@ INSERT_FILE_SQL = (
     '  status,'
     '  consumed_events,'
     '  ignored_events,'
-    '  invalid_lines'
+    '  invalid_events'
     ') '
     'VALUES ('
     '  %(filename)s,'
@@ -26,7 +26,7 @@ INSERT_FILE_SQL = (
     '  %(status)s,'
     '  %(consumed_events)s,'
     '  %(ignored_events)s,'
-    '  %(invalid_lines)s'
+    '  %(invalid_events)s'
     ')'
 )
 
@@ -40,7 +40,7 @@ UPDATE_FILE_SQL = (
     '  status = %(status)s,'
     '  consumed_events = %(consumed_events)s,'
     '  ignored_events = %(ignored_events)s,'
-    '  invalid_lines = %(invalid_lines)s '
+    '  invalid_events = %(invalid_events)s '
     'WHERE'
     '  id = %(db_id)s'
 )
@@ -81,11 +81,11 @@ def new(
         sample_rate = None,
         consumed_events = None,
         ignored_events = None,
-        invalid_lines = None
+        invalid_events = None
     ):
 
     file = LogFile( filename, directory, time, event_type, sample_rate,
-        status, consumed_events, ignored_events, invalid_lines )
+        status, consumed_events, ignored_events, invalid_events )
 
     cursor = db.connection.cursor()
 
@@ -99,7 +99,7 @@ def new(
             'status': status.value,
             'consumed_events': consumed_events,
             'ignored_events': ignored_events,
-            'invalid_lines': invalid_lines
+            'invalid_events': invalid_events
         } )
 
         file.db_id = cursor.lastrowid
@@ -137,7 +137,7 @@ def save( file ):
             'status': file.status.value,
             'consumed_events': file.consumed_events,
             'ignored_events': file.ignored_events,
-            'invalid_lines': file.invalid_lines,
+            'invalid_events': file.invalid_events,
             'db_id': file.db_id
         } )
 

@@ -9,7 +9,7 @@ CREATE TABLE `files` (
   status           ENUM('processing', 'consumed') NOT NULL,
   consumed_events  INT           UNSIGNED DEFAULT NULL,
   ignored_events   INT           UNSIGNED DEFAULT NULL,
-  invalid_lines    INT           UNSIGNED DEFAULT NULL,
+  invalid_events    INT           UNSIGNED DEFAULT NULL,
 
   PRIMARY KEY (id),
   UNIQUE KEY (filename),
