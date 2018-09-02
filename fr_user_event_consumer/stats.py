@@ -4,8 +4,8 @@ class StatCollection:
         self._stats = {}
 
 
-    def new_stat( self, key, description ):
-        self._stats[ key ] = Stat( description )
+    def new_stat( self, key, description, val = 0 ):
+        self._stats[ key ] = Stat( description, val )
 
 
     def increment( self, key, amount ):
@@ -18,9 +18,9 @@ class StatCollection:
 
 class Stat:
 
-    def __init__( self, description ):
+    def __init__( self, description, val = 0 ):
         self._description = description
-        self.val = 0
+        self.val = val
 
 
     def describe( self ):

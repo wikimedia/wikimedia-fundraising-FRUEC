@@ -208,9 +208,6 @@ if __name__ == '__main__':
             to_time = to_time
         )
 
-        # Output stats with description
-        print( '\n'.join( stats.describe() ) )
-
     elif args.command == 'purge-incomplete':
         print(
             ( 'Purge database of {} events from files in a state of incomplete processing, '
@@ -222,7 +219,7 @@ if __name__ == '__main__':
         if confirm.strip() not in ( 'Y', 'y' ):
             sys.exit()
 
-        controller.purge_incomplete(
+        stats = controller.purge_incomplete(
             event_type = event_type,
             db_settings = cfg[ 'db_settings' ]
         )
@@ -230,3 +227,6 @@ if __name__ == '__main__':
     else:
         # Should never get here
         raise ValueError( 'No valid command received' )
+
+    # Output stats with descriptions
+    print( '\n'.join( stats.describe() ) )

@@ -30,7 +30,7 @@ INSERT_DATA_CELL_SQL = (
     ')'
 )
 
-DELETE_DATA_FORM_FILES_WITH_PROCESSING_STATUS_SQL = (
+DELETE_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL = (
     'DELETE'
     '  bannerimpressions '
     'FROM'
@@ -66,7 +66,7 @@ def new_cn_aggregation_step( file, detail_languages, detail_projects_regex ):
 def delete_with_processing_status():
     cursor = db.connection.cursor()
     try:
-        cursor.execute( DELETE_DATA_FORM_FILES_WITH_PROCESSING_STATUS_SQL )
+        cursor.execute( DELETE_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL )
     except mariadb.Error as e:
         db.connection.rollback()
         cursor.close()

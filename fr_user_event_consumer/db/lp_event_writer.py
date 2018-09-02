@@ -54,6 +54,32 @@ INSERT_DONATEWIKI_UNIQUES_SQL = (
     'ON DUPLICATE KEY UPDATE link_id=link_id'
 )
 
+DELETE_LP_RAW_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL = (
+    'DELETE'
+    '  landingpageimpression_raw '
+    'FROM'
+    '  landingpageimpression_raw '
+    'INNER JOIN'
+    '  files '
+    'ON'
+    '  landingpageimpression_raw.file_id = files.id '
+    'WHERE'
+    '  files.status  = \'processing\''
+)
+
+DELETE_DW_U_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL = (
+    'DELETE'
+    '  donatewiki_unique '
+    'FROM'
+    '  donatewiki_unique '
+    'INNER JOIN'
+    '  files '
+    'ON'
+    '  donatewiki_unique.file_id = files.id '
+    'WHERE'
+    '  files.status  = \'processing\''
+)
+
 _logger = logging.getLogger( __name__ )
 
 
@@ -66,7 +92,24 @@ def new_lp_write_step( file, lp_max_batch ):
 
 
 def delete_with_processing_status():
-    pass
+    cursor = db.connection.cursor()
+
+    try:
+        cursor.execute( DELETE_LP_RAW_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL )
+        lp_raw_del = cursor.rowcount
+
+        cursor.execute( DELETE_DW_U_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL )
+        dw_u_del = cursor.rowcount
+
+    except mariadb.Error as e:
+        db.connection.rollback()
+        cursor.close()
+        raise e
+
+    db.connection.commit()
+
+    cursor.close()
+    return ( lp_raw_del, dw_u_del )
 
 
 class LPWriteStep:

@@ -120,17 +120,28 @@ def consume_events(
 def purge_incomplete( event_type, db_settings ):
     _logger.debug( 'Purging data and file records for files with processing status.' )
     db.connect( **db_settings )
+    stats = StatCollection()
 
-    cell_count = db.cn_event_aggregator.delete_with_processing_status()
+    if event_type == EventType.CENTRAL_NOTICE:
+        cells_deleted = db.cn_event_aggregator.delete_with_processing_status()
+        stats.new_stat( 'deleted', 'bannerimpressions rows deleted', cells_deleted )
 
-    _logger.debug( 'Removed {} data cells from files with processing status.'
-        .format( cell_count ) )
+    elif event_type == EventType.LANDING_PAGE:
+        ( lp_raw_del, dwu_del ) = db.lp_event_writer.delete_with_processing_status()
 
-    file_count = db.log_file_mapper.delete_with_processing_status( event_type )
+        stats.new_stat( 'lp_raw_del', 'landingpageimpression_raw rows deleted',
+            lp_raw_del )
 
-    _logger.debug( 'Removed {} files with processing status.'.format( file_count ) )
+        stats.new_stat( 'dwu_del', 'donatewiki_unique rows deleted', dwu_del )
+
+    else:
+        raise ValueError( 'Unknown event type: {}'.format( event_type ) )
+
+    files_del = db.log_file_mapper.delete_with_processing_status( event_type )
+    stats.new_stat( 'files_del', 'files rows deleted', files_del )
 
     db.close()
+    return stats
 
 
 def _process_cn_file( file, detail_languages, detail_projects_regex,
