@@ -1,6 +1,6 @@
 import mysql.connector as mariadb
 
-from fr_user_event_consumer import db
+from fruec import db
 
 def get_or_new( unique_column_val, cache_key, get_sql, insert_sql, new_obj_callback ):
 

@@ -3,7 +3,7 @@ import re
 import logging
 from datetime import datetime
 
-from fr_user_event_consumer import country
+from fruec import country
 
 EVENT_TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%SZ' # Coordinate with EventLogging
 

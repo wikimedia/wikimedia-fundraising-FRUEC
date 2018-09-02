@@ -3,7 +3,7 @@ db_settings:
   user: 'user'
   password: 'pw'
   host: 'localhost'
-  database: 'fr_user_event_consumer_testing'
+  database: 'fruec_testing'
 
 # Default directories to load log files from (absent the --directory command-line option).
 # Log files in sub-directories will also be consumed.

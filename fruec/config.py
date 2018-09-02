@@ -1,6 +1,6 @@
 import yaml
 
-from fr_user_event_consumer import DEFAULT_CONFIG_FILENAMES
+from fruec import DEFAULT_CONFIG_FILENAMES
 
 filename = None
 """Non-default configuration file to load."""

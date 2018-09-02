@@ -1,5 +1,5 @@
-from fr_user_event_consumer.language import Language
-from fr_user_event_consumer import db
+from fruec.language import Language
+from fruec import db
 
 GET_LANGUAGE_SQL = 'SELECT id FROM language WHERE iso_code = %s'
 INSERT_LANGUAGE_SQL = 'INSERT INTO language ( iso_code ) VALUES ( %s )'

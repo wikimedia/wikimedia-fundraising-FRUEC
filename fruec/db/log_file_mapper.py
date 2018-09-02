@@ -1,7 +1,7 @@
 import mysql.connector as mariadb
 
-from fr_user_event_consumer.log_file import LogFile
-from fr_user_event_consumer import db
+from fruec.log_file import LogFile
+from fruec import db
 
 FILE_KNOWN_SQL = 'SELECT EXISTS (SELECT 1 FROM files WHERE filename = %s)'
 

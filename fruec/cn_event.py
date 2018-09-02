@@ -1,8 +1,8 @@
 import re
 import logging
 
-from fr_user_event_consumer import project, language
-from fr_user_event_consumer.event import Event
+from fruec import project, language
+from fruec.event import Event
 
 _STR_FIELD_LIMITS = {
     'banner': 255,

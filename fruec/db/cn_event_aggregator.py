@@ -3,9 +3,9 @@ from datetime import timedelta
 import logging
 import mysql.connector as mariadb
 
-from fr_user_event_consumer.cn_event import CNEvent
-from fr_user_event_consumer.db import project_mapper, language_mapper, country_mapper
-from fr_user_event_consumer import db
+from fruec.cn_event import CNEvent
+from fruec.db import project_mapper, language_mapper, country_mapper
+from fruec import db
 
 INSERT_DATA_CELL_SQL = (
     'INSERT INTO bannerimpressions ('

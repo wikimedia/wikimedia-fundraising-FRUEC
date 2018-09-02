@@ -1,7 +1,7 @@
 import logging
 
-from fr_user_event_consumer.event import Event
-from fr_user_event_consumer import language
+from fruec.event import Event
+from fruec import language
 
 _STR_FIELDS_DEFAULT_VALIDATE = [
     'utm_source',

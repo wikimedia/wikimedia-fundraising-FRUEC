@@ -1,9 +1,9 @@
 import mysql.connector as mariadb
 import logging
 
-from fr_user_event_consumer.lp_event import LPEvent
-from fr_user_event_consumer.db import project_mapper, language_mapper, country_mapper
-from fr_user_event_consumer import db
+from fruec.lp_event import LPEvent
+from fruec.db import project_mapper, language_mapper, country_mapper
+from fruec import db
 
 INSERT_LP_RAW_SQL = (
     'INSERT INTO landingpageimpression_raw ('

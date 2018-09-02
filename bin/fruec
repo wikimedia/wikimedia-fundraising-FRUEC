@@ -4,8 +4,8 @@ import sys
 import argparse
 from datetime import datetime
 
-from fr_user_event_consumer import config, setup_logging, controller
-from fr_user_event_consumer.event_type import EventType
+from fruec import config, setup_logging, controller
+from fruec.event_type import EventType
 
 # Entry point
 if __name__ == '__main__':
@@ -21,7 +21,7 @@ if __name__ == '__main__':
             'Two commands are available (see below). For detailed help about the\n'
             'options available for each, run: fruec [command] --help.\n\n'
             'Notes: Log filenames must be globally unique across all types of logs\n'
-            'consumed by fr_user_event_consumer. Regardless of the options selected,\n'
+            'consumed by fruec. Regardless of the options selected,\n'
             'events will only be consumed from files that have not been marked as\n'
             'already processed.',
         formatter_class = argparse.RawTextHelpFormatter
@@ -39,8 +39,7 @@ if __name__ == '__main__':
 
     config_kwargs = {
         'help': """Configuration file to use. (Without this option, the script looks for a
-            configuraiton file in the working directory and in
-            /etc/fr_user_event_consumer/.)"""
+            configuraiton file in the working directory and in /etc/fruec/.)"""
     }
 
     debug_kwargs = {

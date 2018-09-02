@@ -9,7 +9,7 @@ Usage
 
 Copy `config-example.yaml` to `config.yaml` and adjust settings as appropriate.
 Scripts look for a configuration file in the working directory or in
-`/etc/fr_user_events_consumer`.
+`/etc/fruec`.
 
 Command-line script is `bin/fruec`. Run it with --help for details about command-line
 options. See also inline comments in `config-example.yaml` and sample log files
@@ -41,7 +41,7 @@ For developer setup, create a database and a database user, grant the user right
 the database, then run the following command (substituting database, user and password
 as appropriate):
 
-`mariadb -u fr_user_event_consumer --password=pwd_for_fruec fr_user_events < sql/create_tables.sql`
+`mariadb -u fruec --password=pwd_for_fruec fr_user_events < sql/create_tables.sql`
 
 For development purposes, the SQL to drop all tables is also provided. To use it, copy
 `sql/drop_tables_example.sql` as `sql/drop_tables.sql` and uncomment the last two
@@ -49,7 +49,7 @@ two lines.
 
 Then, you can reset the database like this:
 
-`cat sql/drop_tables.sql sql/create_tables.sql | mariadb -u fr_user_event_consumer --password=pwd_for_fruec fr_user_events`
+`cat sql/drop_tables.sql sql/create_tables.sql | mariadb -u fruec --password=pwd_for_fruec fr_user_events`
 
 (Do not deploy an uncommented version of the drop tables file to production. Using the
 filename `sql/drop_tables.sql` for the uncommented version will prevent it from being

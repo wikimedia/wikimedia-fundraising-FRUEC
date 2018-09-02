@@ -1,6 +1,6 @@
 import logging
 
-DEFAULT_CONFIG_FILENAMES = [ './config.yaml', '/etc/fr_user_events_consumer/config.yaml' ]
+DEFAULT_CONFIG_FILENAMES = [ './config.yaml', '/etc/fruec/config.yaml' ]
 
 LOG_FORMAT = '{levelname} {msg} ({filename} line {lineno})'
 

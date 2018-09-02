@@ -1,9 +1,9 @@
 import logging
 
-from fr_user_event_consumer.log_file import LogFileStatus
-from fr_user_event_consumer.event_type import EventType
-from fr_user_event_consumer.stats import StatCollection
-from fr_user_event_consumer import log_file_manager, db, event
+from fruec.log_file import LogFileStatus
+from fruec.event_type import EventType
+from fruec.stats import StatCollection
+from fruec import log_file_manager, db, event
 
 _CONSUMIBLE_LP_PROJECT_IDENTIFIERS = [ 'donatewiki' ]
 

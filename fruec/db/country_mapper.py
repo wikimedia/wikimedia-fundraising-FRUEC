@@ -1,5 +1,5 @@
-from fr_user_event_consumer.country import Country
-from fr_user_event_consumer import db
+from fruec.country import Country
+from fruec import db
 
 GET_COUNTRY_SQL = 'SELECT id FROM country WHERE iso_code = %s'
 INSERT_COUNTRY_SQL = 'INSERT INTO country ( iso_code ) VALUES ( %s )'

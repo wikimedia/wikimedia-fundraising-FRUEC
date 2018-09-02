@@ -1,5 +1,5 @@
-from fr_user_event_consumer.project import Project
-from fr_user_event_consumer import db
+from fruec.project import Project
+from fruec import db
 
 GET_PROJECT_SQL = 'SELECT id FROM project WHERE project = %s'
 INSERT_PROJECT_SQL = 'INSERT INTO project ( project ) VALUES ( %s )'
