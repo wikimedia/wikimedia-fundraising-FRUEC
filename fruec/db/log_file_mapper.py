@@ -45,7 +45,15 @@ UPDATE_FILE_SQL = (
     '  id = %(db_id)s'
 )
 
-LATEST_TIME_SQL = 'SELECT timestamp FROM files ORDER BY timestamp DESC LIMIT 1'
+LATEST_TIME_SQL = (
+    'SELECT timestamp '
+    'FROM files '
+    'WHERE '
+    '  status = \'consumed\' '
+    '  AND impressiontype = %s '
+    'ORDER BY timestamp DESC '
+    'LIMIT 1'
+)
 
 FILES_WITH_PROCESSING_STATUS_SQL = (
     'SELECT EXISTS ('
@@ -150,9 +158,10 @@ def save( file ):
     cursor.close()
 
 
-def get_lastest_time():
+def get_lastest_time( event_type ):
+    """Get the most recent timestamp of all consumed files for a given EventType."""
     cursor = db.connection.cursor()
-    cursor.execute( LATEST_TIME_SQL )
+    cursor.execute( LATEST_TIME_SQL, ( event_type.legacy_key, ) )
     row = cursor.fetchone()
     cursor.close()
     return row[0] if row else None

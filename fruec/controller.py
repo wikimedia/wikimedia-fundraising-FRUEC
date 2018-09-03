@@ -43,7 +43,7 @@ def consume_events(
 
     # For from_latest option, get the most recent time of all consumed files
     if from_latest:
-        from_time = db.log_file_mapper.get_lastest_time()
+        from_time = db.log_file_mapper.get_lastest_time( event_type )
         if from_time is None:
             _logger.warn(
                 'Requested processing files from latest time previously consumed, '
