@@ -7,7 +7,10 @@ from fruec.cn_event import CNEvent
 from fruec.db import project_mapper, language_mapper, country_mapper
 from fruec import db
 
-INSERT_DATA_CELL_SQL = (
+
+# SQL template for inserting a row in bannerimpressions. (Each row is a "data cell" with
+# aggregated data from one or more CentralNotice events).
+_INSERT_DATA_CELL_SQL = (
     'INSERT INTO bannerimpressions ('
     '  timestamp,'
     '  banner,'
@@ -30,7 +33,9 @@ INSERT_DATA_CELL_SQL = (
     ')'
 )
 
-DELETE_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL = (
+# SQL template for purging bannerimpressions rows from files in a state of incomplete
+# processing.
+_DELETE_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL = (
     'DELETE'
     '  bannerimpressions '
     'FROM'
@@ -66,7 +71,7 @@ def new_cn_aggregation_step( file, detail_languages, detail_projects_regex ):
 def delete_with_processing_status():
     cursor = db.connection.cursor()
     try:
-        cursor.execute( DELETE_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL )
+        cursor.execute( _DELETE_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL )
     except mariadb.Error as e:
         db.connection.rollback()
         cursor.close()
@@ -150,7 +155,7 @@ class CNAggregationStep:
         for cell in self._data.values():
 
             try:
-                cursor.execute( INSERT_DATA_CELL_SQL, {
+                cursor.execute( _INSERT_DATA_CELL_SQL, {
                     'timestamp': cell.time,
                     'banner': cell.banner,
                     'campaign': cell.campaign,

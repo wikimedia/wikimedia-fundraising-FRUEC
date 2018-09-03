@@ -5,7 +5,7 @@ from fruec.lp_event import LPEvent
 from fruec.db import project_mapper, language_mapper, country_mapper
 from fruec import db
 
-INSERT_LP_RAW_SQL = (
+_INSERT_LP_RAW_SQL = (
     'INSERT INTO landingpageimpression_raw ('
     '  timestamp,'
     '  utm_source,'
@@ -34,7 +34,7 @@ INSERT_LP_RAW_SQL = (
 
 # Using a no-op on duplicate key update; see:
 # https://stackoverflow.com/questions/548541/insert-ignore-vs-insert-on-duplicate-key-update
-INSERT_DONATEWIKI_UNIQUES_SQL = (
+_INSERT_DONATEWIKI_UNIQUES_SQL = (
     'INSERT INTO donatewiki_unique ('
     '  timestamp,'
     '  utm_source,'
@@ -54,7 +54,7 @@ INSERT_DONATEWIKI_UNIQUES_SQL = (
     'ON DUPLICATE KEY UPDATE link_id=link_id'
 )
 
-DELETE_LP_RAW_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL = (
+_DELETE_LP_RAW_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL = (
     'DELETE'
     '  landingpageimpression_raw '
     'FROM'
@@ -67,7 +67,7 @@ DELETE_LP_RAW_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL = (
     '  files.status  = \'processing\''
 )
 
-DELETE_DW_U_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL = (
+_DELETE_DW_U_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL = (
     'DELETE'
     '  donatewiki_unique '
     'FROM'
@@ -95,10 +95,10 @@ def delete_with_processing_status():
     cursor = db.connection.cursor()
 
     try:
-        cursor.execute( DELETE_LP_RAW_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL )
+        cursor.execute( _DELETE_LP_RAW_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL )
         lp_raw_del = cursor.rowcount
 
-        cursor.execute( DELETE_DW_U_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL )
+        cursor.execute( _DELETE_DW_U_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL )
         dw_u_del = cursor.rowcount
 
     except mariadb.Error as e:
@@ -134,10 +134,10 @@ class LPWriteStep:
         cursor = db.connection.cursor()
 
         try:
-            cursor.executemany( INSERT_LP_RAW_SQL,
+            cursor.executemany( _INSERT_LP_RAW_SQL,
                 [ fields.lp_raw_fields for fields in self._event_insert_fields ] )
 
-            cursor.executemany( INSERT_DONATEWIKI_UNIQUES_SQL,
+            cursor.executemany( _INSERT_DONATEWIKI_UNIQUES_SQL,
                 [ fields.donatewiki_unique_fields for fields in self._event_insert_fields ] )
 
         except mariadb.Error as e:

@@ -3,9 +3,10 @@ import mysql.connector as mariadb
 from fruec.log_file import LogFile
 from fruec import db
 
-FILE_KNOWN_SQL = 'SELECT EXISTS (SELECT 1 FROM files WHERE filename = %s)'
 
-INSERT_FILE_SQL = (
+_FILE_KNOWN_SQL = 'SELECT EXISTS (SELECT 1 FROM files WHERE filename = %s)'
+
+_INSERT_FILE_SQL = (
     'INSERT INTO files ('
     '  filename,'
     '  impressiontype,'
@@ -30,7 +31,7 @@ INSERT_FILE_SQL = (
     ')'
 )
 
-UPDATE_FILE_SQL = (
+_UPDATE_FILE_SQL = (
     'UPDATE files SET'
     '  filename = %(filename)s,'
     '  impressiontype = %(impressiontype)s,'
@@ -45,7 +46,7 @@ UPDATE_FILE_SQL = (
     '  id = %(db_id)s'
 )
 
-LATEST_TIME_SQL = (
+_LATEST_TIME_SQL = (
     'SELECT timestamp '
     'FROM files '
     'WHERE '
@@ -55,16 +56,16 @@ LATEST_TIME_SQL = (
     'LIMIT 1'
 )
 
-FILES_WITH_PROCESSING_STATUS_SQL = (
+_FILES_WITH_PROCESSING_STATUS_SQL = (
     'SELECT EXISTS ('
     '  SELECT 1 FROM files WHERE status = \'processing\' AND impressiontype = %s LIMIT 1'
     ')'
 )
 
-DELETE_WITH_PROCESSING_STATUS_SQL = (
+_DELETE_WITH_PROCESSING_STATUS_SQL = (
     'DELETE FROM files WHERE status = \'processing\' AND  impressiontype = %s' )
 
-CACHE_KEY_PREFIX = 'LogFile'
+_CACHE_KEY_PREFIX = 'LogFile'
 
 
 def known( filename ):
@@ -74,7 +75,7 @@ def known( filename ):
         return True
 
     cursor = db.connection.cursor()
-    cursor.execute( FILE_KNOWN_SQL, ( filename, ) )
+    cursor.execute( _FILE_KNOWN_SQL, ( filename, ) )
     result = bool( cursor.fetchone()[ 0 ] )
     cursor.close()
     return result
@@ -98,7 +99,7 @@ def new(
     cursor = db.connection.cursor()
 
     try:
-        cursor.execute( INSERT_FILE_SQL, {
+        cursor.execute( _INSERT_FILE_SQL, {
             'filename': filename,
             'impressiontype': event_type.legacy_key,
             'timestamp': time,
@@ -136,7 +137,7 @@ def save( file ):
     cursor = db.connection.cursor()
 
     try:
-        cursor.execute( UPDATE_FILE_SQL, {
+        cursor.execute( _UPDATE_FILE_SQL, {
             'filename': file.filename,
             'impressiontype': file.event_type.legacy_key,
             'timestamp': file.time,
@@ -161,7 +162,7 @@ def save( file ):
 def get_lastest_time( event_type ):
     """Get the most recent timestamp of all consumed files for a given EventType."""
     cursor = db.connection.cursor()
-    cursor.execute( LATEST_TIME_SQL, ( event_type.legacy_key, ) )
+    cursor.execute( _LATEST_TIME_SQL, ( event_type.legacy_key, ) )
     row = cursor.fetchone()
     cursor.close()
     return row[0] if row else None
@@ -169,7 +170,7 @@ def get_lastest_time( event_type ):
 
 def files_with_processing_status( event_type ):
     cursor = db.connection.cursor()
-    cursor.execute( FILES_WITH_PROCESSING_STATUS_SQL, ( event_type.legacy_key, ) )
+    cursor.execute( _FILES_WITH_PROCESSING_STATUS_SQL, ( event_type.legacy_key, ) )
     result = bool( cursor.fetchone()[ 0 ] )
     cursor.close()
     return result
@@ -178,7 +179,7 @@ def files_with_processing_status( event_type ):
 def delete_with_processing_status( event_type ):
     cursor = db.connection.cursor()
     try:
-        cursor.execute( DELETE_WITH_PROCESSING_STATUS_SQL, ( event_type.legacy_key, ) )
+        cursor.execute( _DELETE_WITH_PROCESSING_STATUS_SQL, ( event_type.legacy_key, ) )
     except mariadb.Error as e:
         db.connection.rollback()
         cursor.close()
@@ -190,4 +191,4 @@ def delete_with_processing_status( event_type ):
 
 
 def _make_cache_key( filename ):
-    return CACHE_KEY_PREFIX + filename
+    return _CACHE_KEY_PREFIX + filename
