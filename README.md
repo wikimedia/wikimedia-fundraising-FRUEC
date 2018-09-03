@@ -55,8 +55,6 @@ Then, you can reset the database like this:
 filename `sql/drop_tables.sql` for the uncommented version will prevent it from being
 added to the Git repository.)
 
-
-
 Installation
 ------------
 

@@ -1,4 +1,11 @@
 #!/usr/bin/python3
+"""Command-line script for fruec (Fundraising User Event Consumer)
+Code layout: This script sets up and parses command-line arguments, gets configuration
+from the config module, calls public controller functions as appropriate, and outputs some
+useful stats via stdout. No other code in this library should deal directly with
+command-line arguments, config, stdout, stdin or public controller functions.
+"""
+
 
 import sys
 import argparse
@@ -7,7 +14,8 @@ from datetime import datetime
 from fruec import config, setup_logging, controller
 from fruec.event_type import EventType
 
-# Entry point
+
+# Only run as command-line script
 if __name__ == '__main__':
 
     # Set up command-line arguments
@@ -29,8 +37,8 @@ if __name__ == '__main__':
 
     # There are three global options available for both commands: --event-type,
     # --config and --debug. However, we add those as specific arguments for each
-    # command, so that they may be placed after the command. Here we just set
-    # some variables for that common setup.
+    # command (rather than as global options) so that they may be placed after the
+    # command. Here we just set some variables for that common setup.
     event_type_kwargs = {
         'help': 'Type of event.',
         'choices': [ 'centralnotice', 'landingpage' ],
@@ -39,13 +47,12 @@ if __name__ == '__main__':
 
     config_kwargs = {
         'help': """Configuration file to use. (Without this option, the script looks for a
-            configuraiton file in the working directory and in /etc/fruec/.)"""
+            configuration file in the working directory and in /etc/fruec/.)"""
     }
 
     debug_kwargs = {
         'help': 'Output debugging info to stderr.',
         'action': 'store_true'
-
     }
 
     # There are two commands: 'consume' to consume log files, and 'purge-incomplete' to
@@ -78,16 +85,17 @@ if __name__ == '__main__':
             with gzip."""
     )
 
-    # The two options to indicate the beginning of the time window for files to select
-    # are mutually exclusive.
+    # The two options for the beginning of the time window to select (--from and
+    # --from-latest-consumed) are mutually exclusive.
     since_grp = consume_parser.add_mutually_exclusive_group()
 
     since_grp.add_argument(
         '--from-latest-consumed',
         help =
             """Process files for times from the timestamp of most recent file consumed,
-            inclusive. The last file processed will be included in the list to process,
-            but it will be skipped. May not be used with the --from option.""",
+            inclusive, for the given event type. The most recent file processed will
+            normally be included in the list to process, but it will be skipped. May not
+            be used with the --from option.""",
         dest = 'from_latest',
         action = 'store_true'
     )
@@ -129,7 +137,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Do stuff with options available to all commands
-    config.filename = args.config # Will be None if the command-line option is not set
+    config.filename = args.config # Will be None if the command-line option was not set
     cfg = config.get()
 
     setup_logging( args.debug )
@@ -141,8 +149,8 @@ if __name__ == '__main__':
     else:
         raise ValueError( 'Invalid event type: {}'.format( args.event_type ) )
 
-    # Consume command
     if args.command == 'consume':
+        # consume command
 
         # Parse timestamp command-line arguments. This should raise an error if they're
         # not in the right format.
@@ -163,6 +171,8 @@ if __name__ == '__main__':
         from_latest = args.from_latest
 
         # Set directory and file_glob as per command-line arguments and config
+        # (We've already checked that we have a valid event type, so no need to do that
+        # here.)
         if args.directory:
             directory = args.directory
         elif event_type == EventType.CENTRAL_NOTICE:
@@ -188,7 +198,7 @@ if __name__ == '__main__':
         print( 'Consuming {} events in files matching \'{}\' in \'{}\' directory, {}, {}.'
             .format( event_type.output_name, file_glob, directory, from_msg, to_msg ) )
 
-        # Call the controller
+        # Call the controller function to consume events.
         # Event-type-specific controller arguments are just ignored if not needed.
         stats = controller.consume_events(
             event_type = event_type,
@@ -208,6 +218,9 @@ if __name__ == '__main__':
         )
 
     elif args.command == 'purge-incomplete':
+        # purge-incomplete command
+
+        # Get a confirmation from the user before proceeding.
         print(
             ( 'Purge database of {} events from files in a state of incomplete processing, '
             'and purge records of those files. WARNING: Back up database before '
@@ -218,6 +231,7 @@ if __name__ == '__main__':
         if confirm.strip() not in ( 'Y', 'y' ):
             sys.exit()
 
+        # Call the controller function to purge data from incompletely processed files
         stats = controller.purge_incomplete(
             event_type = event_type,
             db_settings = cfg[ 'db_settings' ]
@@ -225,7 +239,7 @@ if __name__ == '__main__':
 
     else:
         # Should never get here
-        raise ValueError( 'No valid command received' )
+        raise ValueError( 'No valid command received.' )
 
     # Output stats with descriptions
     print( '\n'.join( stats.describe() ) )

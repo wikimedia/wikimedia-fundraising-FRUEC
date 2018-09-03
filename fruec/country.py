@@ -9,6 +9,11 @@ def is_valid_country_code( country_code ):
 class Country:
 
     def __init__( self, country_code ):
+        """Create a country object.
+
+        :param str country_code: Code for the country, as received from the event.
+        """
+
         if not is_valid_country_code( country_code ):
             raise ValueError( 'Invalid country code: {}'.format( country_code ) )
 

@@ -1,11 +1,16 @@
+"""Module to retrieve configuration settings."""
+
+
 import yaml
 
 from fruec import DEFAULT_CONFIG_FILENAMES
 
 filename = None
-"""Non-default configuration file to load."""
+"""Non-default configuration file to load. (To load from default locations, leave this
+set to None.)"""
 
 _config = None
+
 
 def get():
     """Return configuration object. This method loads configuration from the appropriate

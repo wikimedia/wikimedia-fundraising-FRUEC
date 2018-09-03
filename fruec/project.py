@@ -12,6 +12,11 @@ def is_valid_identifier( identifier ):
 class Project:
 
     def __init__( self, identifier ):
+        """Create a new Project object.
+
+        :param str identifier: Identifier for the project, as received from the event.
+        """
+
         if not is_valid_identifier( identifier ):
             raise ValueError( 'Invalid project identifier {}'.format( identifier ) )
 

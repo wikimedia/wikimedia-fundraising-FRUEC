@@ -1,6 +1,11 @@
+""""Module for database operations involving Countries."""
+
+
 from fruec.country import Country
 from fruec import db
 
+
+3# SQL templates
 _GET_COUNTRY_SQL = 'SELECT id FROM country WHERE iso_code = %s'
 _INSERT_COUNTRY_SQL = 'INSERT INTO country ( iso_code ) VALUES ( %s )'
 _CACHE_KEY_PREFIX = 'Country'
@@ -15,6 +20,7 @@ def get_or_new( country_code ):
 
     cache_key = _CACHE_KEY_PREFIX + country_code
 
+    # This helper lets us re-use DB logic among country, language and project mappers
     return db.lookup_on_unique_column_helper.get_or_new(
         unique_column_val = country_code,
         cache_key = cache_key,

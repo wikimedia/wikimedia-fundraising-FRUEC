@@ -1,9 +1,13 @@
+""""Module for database operations involving LogFiles."""
+
+
 import mysql.connector as mariadb
 
 from fruec.log_file import LogFile
 from fruec import db
 
 
+# SQl templates
 _FILE_KNOWN_SQL = 'SELECT EXISTS (SELECT 1 FROM files WHERE filename = %s)'
 
 _INSERT_FILE_SQL = (
@@ -69,8 +73,15 @@ _CACHE_KEY_PREFIX = 'LogFile'
 
 
 def known( filename ):
-    """Note: We don't include event type in the query; filenames must be unique across all
-    event types."""
+    """ Is there a record of a file with this filename in the database?
+    Note: We don't include event type in the query; filenames must be unique across all
+    event types.
+
+    :param str filename: The filename (without the directory).
+    :returns bool
+    """
+
+    # We assume that if a LogFile object is in the cache, a corresponding row is in the db
     if db.object_in_cache( _make_cache_key( filename ) ):
         return True
 
@@ -92,6 +103,17 @@ def new(
         ignored_events = None,
         invalid_events = None
     ):
+    """Get a new LogFile object, and insert a corresponding row in the database.
+
+    :param str filename: Unique filename (without directory).
+    :param str directory: Directory the file was read from.
+    :param fruec.event_type.EventType event_type: The type of events in the log file.
+    :param fruec.log_file.LogFileStatus status: The processing status of the log file.
+    :param float sample_rate: Server-side sample rate for events in the file.
+    :param int consumed_events: Number of events in the file that have been consumed.
+    :param int ignored_events: Number of events in the file that have been ignored.
+    :param int invalid_events: Number of events in the file found to be invalid.
+    """
 
     file = LogFile( filename, directory, time, event_type, sample_rate,
         status, consumed_events, ignored_events, invalid_events )
@@ -121,21 +143,30 @@ def new(
     db.connection.commit()
     cursor.close()
 
+    # Put the file object in the cache
     db.set_object_in_cache( _make_cache_key( filename ), file )
+
     return file
 
 
 def save( file ):
+    """Save (update) the LogFile object in the database.
+    (We assume a corresponding row already exists in the database LogFile objects should
+    only be obtained using the new() function, above, which inserts a row.)
+
+    :para fruec.log_file.LogFile file: The LogFile object to save.
+    """
 
     # Sanity check: file should already be in the cache
     if db.get_cached_object( _make_cache_key( file.filename ) ) != file:
         raise RuntimeError(
-            ( 'Attempting to save existing log file {} but it\'s not in the cache, or '
-            'a different object is in the cache.' ).format( file.filename )
+            ( 'Attempting to save an existing LogFile object for {}, but it\'s not in the '
+            'object cache.' ).format( file.filename )
         )
 
     cursor = db.connection.cursor()
 
+    # This should throw an error if the row doesn't already exist in the database.
     try:
         cursor.execute( _UPDATE_FILE_SQL, {
             'filename': file.filename,
@@ -160,7 +191,11 @@ def save( file ):
 
 
 def get_lastest_time( event_type ):
-    """Get the most recent timestamp of all consumed files for a given EventType."""
+    """Get the most recent timestamp of all consumed files for a given EventType.
+
+    :param fruec.event_type.EventType event type
+    """
+
     cursor = db.connection.cursor()
     cursor.execute( _LATEST_TIME_SQL, ( event_type.legacy_key, ) )
     row = cursor.fetchone()
@@ -169,6 +204,12 @@ def get_lastest_time( event_type ):
 
 
 def files_with_processing_status( event_type ):
+    """Are there files with processing status for the given EventType?
+
+    :param fruec.event_type.EventType event type
+    :returns bool
+    """
+
     cursor = db.connection.cursor()
     cursor.execute( _FILES_WITH_PROCESSING_STATUS_SQL, ( event_type.legacy_key, ) )
     result = bool( cursor.fetchone()[ 0 ] )
@@ -177,6 +218,8 @@ def files_with_processing_status( event_type ):
 
 
 def delete_with_processing_status( event_type ):
+    """Delete from the files table all rows with processing status."""
+
     cursor = db.connection.cursor()
     try:
         cursor.execute( _DELETE_WITH_PROCESSING_STATUS_SQL, ( event_type.legacy_key, ) )

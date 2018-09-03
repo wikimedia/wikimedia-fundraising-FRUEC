@@ -1,14 +1,32 @@
+"""A module for processing log files. Interaction with the filesystem (including
+searching directories and reading files), as well as interpreting data contained in
+filenames, are the exclusive responsibility of this module."""
+
+
 import os
 import glob
 import gzip
 import re
 import datetime
 
+
 _gzip_filename_pattern = re.compile( '.*\.gz$' )
 
 
-def file_infos( timestamp_format, extract_timetamp_regex, directory, file_glob,
+def file_infos( timestamp_format, extract_timestamp_regex, directory, file_glob,
     from_time = None, to_time = None ):
+    """Find files as specified, and return a dictionary with informaiton about them.
+
+    :param str timestamp_format: Format of timestamps in filenames (as used by
+        datatime.strptime()).
+    :param str extract_timestamp_regex: Regex to extract timestamps from filenames.
+    :param str directory: The root directory to look for files in (subdirectories will
+        also be included).
+    :param str file_glob: A filesystem glob to select log files.
+    :param datetime.datetime from_time: Select files from this time onward (inclusive).
+    :param datetime.datetime to_time: Select files up to this time (inclusive).
+    :returns dict: A dictionary with the following keys: filename, directory and time.
+    """
 
     if not os.path.isdir( directory ):
         raise ValueError( 'Not a directory: {}'.format( directory ) )
@@ -20,7 +38,7 @@ def file_infos( timestamp_format, extract_timetamp_regex, directory, file_glob,
     directories = [ x[0] for x in os.walk( directory, followlinks = False ) ]
 
     # Regex pattern for extracting timestamps from filenames
-    extract_ts_pattern = re.compile( extract_timetamp_regex )
+    extract_ts_pattern = re.compile( extract_timestamp_regex )
 
     # Check for duplicate filenames (since we're looking in subdirectories, too)
     filenames = []
@@ -59,6 +77,13 @@ def file_infos( timestamp_format, extract_timetamp_regex, directory, file_glob,
 
 
 def sample_rate( filename, extract_sample_rate_regex ):
+    """Extract sample rate data from a filename.
+
+    :param str filename: The filename with the sample rate data.
+    :param str extract_timestamp_regex: Regex to extract timestamps from filenames.
+    :returns int
+    """
+
     m = re.search( extract_sample_rate_regex, filename )
 
     if not m:
@@ -74,9 +99,16 @@ def sample_rate( filename, extract_sample_rate_regex ):
 
 
 def lines( file ):
+    """Get a generator to iterate over lines in a file.
+
+    :param fruec.log_file.LogFile file: The file object for the file to open and read.
+    :returns generator: A generator providing tuples with line contents and line numbers.
+    """
+
     filename = os.path.join( file.directory, file.filename )
     line_no = 1 # First line is 1
 
+    # Open normally or with gzip, depending on the filename
     if _gzip_filename_pattern.match( file.filename ):
         with gzip.open( filename ) as stream:
             for l in stream:

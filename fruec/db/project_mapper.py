@@ -1,7 +1,11 @@
+""""Module for database operations involving Projects."""
+
+
 from fruec.project import Project
 from fruec import db
 
 
+# SQL templates
 _GET_PROJECT_SQL = 'SELECT id FROM project WHERE project = %s'
 _INSERT_PROJECT_SQL = 'INSERT INTO project ( project ) VALUES ( %s )'
 _CACHE_KEY_PREFIX = 'Project'
@@ -16,6 +20,7 @@ def get_or_new( identifier ):
 
     cache_key = _CACHE_KEY_PREFIX + identifier
 
+    # This helper lets us re-use DB logic among country, language and project mappers
     return db.lookup_on_unique_column_helper.get_or_new(
         unique_column_val = identifier,
         cache_key = cache_key,

@@ -1,3 +1,6 @@
+"""Module for database operations involving LandingPage events."""
+
+
 import mysql.connector as mariadb
 import logging
 
@@ -5,6 +8,8 @@ from fruec.lp_event import LPEvent
 from fruec.db import project_mapper, language_mapper, country_mapper
 from fruec import db
 
+
+# SQl templates for inserting a row in the landingpageimpression_raw table
 _INSERT_LP_RAW_SQL = (
     'INSERT INTO landingpageimpression_raw ('
     '  timestamp,'
@@ -32,6 +37,8 @@ _INSERT_LP_RAW_SQL = (
     ')'
 )
 
+# SQl templates for inserting a row in the donatewiki_uniques table. This table does not
+# allow duplicate combinations of values for of utm_source and contact_id columns.
 # Using a no-op on duplicate key update; see:
 # https://stackoverflow.com/questions/548541/insert-ignore-vs-insert-on-duplicate-key-update
 _INSERT_DONATEWIKI_UNIQUES_SQL = (
@@ -84,14 +91,31 @@ _logger = logging.getLogger( __name__ )
 
 
 def new_unsaved( json_string, default_str_validation_regex ):
+    """Return a new LPEvent object (but don't save it in the database).
+
+    :param str default_str_validation_regex: Regex to use to validate string fields by
+        default (used for string fields that don't have more specific validation
+        requirements).
+    :returns fruec.lp_event.LPEvent
+    """
     return LPEvent( json_string, default_str_validation_regex )
 
 
 def new_lp_write_step( file, lp_max_batch ):
+    """Return a new LPWriteStep object, used to write LandingPage event data to the db.
+
+    :param fruec.log_file.LogFile file: The file that events were read from.
+    :param int lp_max_batch: Maximum number of events to write at once.
+    :returns LPWriteStep
+    """
+
     return LPWriteStep( file, lp_max_batch )
 
 
 def delete_with_processing_status():
+    """Delete from the landingpageimpression_raw and donatewiki_unique tables all rows
+    from events from files with processing status.
+    """
     cursor = db.connection.cursor()
 
     try:
@@ -113,14 +137,29 @@ def delete_with_processing_status():
 
 
 class LPWriteStep:
+    """A step in writing data from LandingPage events."""
 
     def __init__( self, file, lp_max_batch ):
+        """Create a new step in writing data from LandingPage events.
+
+        :param fruec.log_file.LogFile file: The file that events were read from.
+        :param int lp_max_batch: Maximum number of events to write at once.
+        """
+
         self._file = file
         self._lp_max_batch = lp_max_batch
         self._event_insert_fields = []
 
 
     def add_event_and_maybe_write( self, event ):
+        """Add an event to this write step. If we've reached lp_max_batch limit, write
+        all events that have been added but not yet written.
+
+        :param fruec.lp_event.LPEvent event
+        """
+
+        # Instead of making a list of events to add, we make a list of
+        # _LPEventInsertFields, which prepare data for the SQL insert statements.
         self._event_insert_fields.append( _LPEventInsertFields( event, self._file ) )
 
         if len( self._event_insert_fields ) > self._lp_max_batch:
@@ -128,6 +167,8 @@ class LPWriteStep:
 
 
     def write_events_not_yet_written( self ):
+        """Write to the database any events added to the step but not yet written."""
+
         _logger.debug(
             'Writing {} landingpage events'.format( len( self._event_insert_fields ) ) )
 
@@ -148,18 +189,30 @@ class LPWriteStep:
         db.connection.commit()
         cursor.close()
 
+        # Reset the list of event data to add.
         self._event_insert_fields = []
 
 
 class _LPEventInsertFields:
+    """A private container for LandingPage events to write. Prepares data for SQL
+    insert statements."""
+
 
     def __init__( self, event, file ):
+        """Create a private container for LandingPage events to write. Prepares data for
+        SQL insert statements.
+
+        :param fruec.lp_event.LPEvent event: The event to be written.
+        :param fruec.log_file.LogFile file: The file the event data was read from.
+        """
         self._event = event
 
+        # Get project, language and country objects using data from the event.
         project = project_mapper.get_or_new( event.project_identifier )
         language = language_mapper.get_or_new( event.language_code )
         country = country_mapper.get_or_new( event.country_code )
 
+        # Prepare dictionaries of column names and values to use in SQL insert statements.
         self.lp_raw_fields = {
             'timestamp': event.time,
             'utm_source': event.utm_source,

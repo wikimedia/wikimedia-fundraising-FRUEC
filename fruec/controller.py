@@ -1,3 +1,12 @@
+"""Controller module, responsible for high-level logic for FRUEC tasks. General rules:
+- The controller may know about the modules it uses to perform lower-level tasks, but
+no other code (except the entry point script) may know about controller functions.
+- Controller module is stateless. All settings are passed in as method arguments; the
+controller may not retrieve configuration itself (only the entry point script does that).
+- As much as possible, other modules are also stateless.
+"""
+
+
 import logging
 
 from fruec.log_file import LogFileStatus
@@ -26,6 +35,34 @@ def consume_events(
     from_time = None,
     to_time = None
 ):
+    """Consume events from log files, as per settings provided. (Settings not applicable
+    to the requested event type will just be ignored.) Returns a collection of stats
+    about the processing.
+
+    :param fruec.event_type.EventType event_type: The type of events to consume.
+    :param dict db_settings: A dictionary with database settings.
+    :param str timestamp_format_in_filenames: Format of timestamps in filenames (as used
+        by datatime.strptime()).
+    :param str extract_timestamp_regex: Regex to extract timestamps from filenames.
+    :param str directory: The root directory to look for files in (subdirectories will
+        also be included).
+    :param str file_glob: A filesystem glob to select log files.
+    :param str default_str_validation_regex: Regex to use to validate string fields by
+        default (used for string fields that don't have more specific validation
+        requirements).
+    :param list detail_languages: Languages to separate out in data aggregation, for
+        CentralNotice events.
+    :param str detail_projects_regex: Regex to match projects to separate out in
+        data aggregation, for CentralNotice events.
+    :param int lp_max_batch: Maximum number of events to write at once.
+    :param bool from_latest: Select files starting at the time of the latest file
+        consumed (inclusive) for this event type. Normally, this will cause the latest
+        file consumed to also be selected, but it will be skipped (as it's flagged as
+        already consumed).
+    :param datetime.datetime from_time: Select files from this time onward (inclusive).
+    :param datetime.datetime to_time: Select files up to this time (inclusive).
+    :returns fruec.stats.StatCollection
+    """
 
     if from_latest and from_time:
         raise ValueError( 'Can\'t set both from_latest and from_time.' )
@@ -33,7 +70,7 @@ def consume_events(
     # Open db connection
     db.connect( **db_settings )
 
-    # Check no files are in partially processed state
+    # Check no files are in partially processed state.
     if db.log_file_mapper.files_with_processing_status( event_type ):
         raise RuntimeError(
             'Files with processing status found. A previous execution was probably '
@@ -41,7 +78,7 @@ def consume_events(
             'data from incomplete processing.'
         )
 
-    # For from_latest option, get the most recent time of all consumed files
+    # For from_latest option, get the most recent time of all consumed files.
     if from_latest:
         from_time = db.log_file_mapper.get_lastest_time( event_type )
         if from_time is None:
@@ -49,16 +86,17 @@ def consume_events(
                 'Requested processing files from latest time previously consumed, '
                 'but no latest time was found. Processing with no \'from\' limit' )
 
-    # Get a list of objects with info about files to try
+    # Get a list of objects with info about files to try.
     file_infos = log_file_manager.file_infos(
         timestamp_format = timestamp_format_in_filenames,
-        extract_timetamp_regex = extract_timestamp_regex,
+        extract_timestamp_regex = extract_timestamp_regex,
         directory = directory,
         file_glob = file_glob,
         from_time = from_time,
         to_time = to_time
     )
 
+    # Set up stats to collect about processing.
     stats = StatCollection()
     stats.new_stat( 'consumed_files', 'Files consumed' )
     stats.new_stat( 'skipped_files',
@@ -67,11 +105,12 @@ def consume_events(
     stats.new_stat( 'ignored_events', 'Events ignored' )
     stats.new_stat( 'invalid_events', 'Invalid events' )
 
+    # Go through infos about selected files.
     for file_info in file_infos:
         filename = file_info[ 'filename' ]
         directory = file_info[ 'directory' ]
 
-        # Skip any files already known to the db
+        # Skip any files already known to the db.
         if db.log_file_mapper.known( filename ):
             _logger.debug( 'Skipping already processed {}.'.format( filename ) )
             stats.increment( 'skipped_files', 1 )
@@ -79,7 +118,7 @@ def consume_events(
 
         _logger.debug( 'Processing {}.'.format( filename ) )
 
-        # Create a new file object and insert it in the database
+        # Create a new file object and insert it in the database.
         file = db.log_file_mapper.new(
             filename = filename,
             directory = directory,
@@ -88,8 +127,8 @@ def consume_events(
             status = LogFileStatus.PROCESSING
         )
 
-        # Process the file according to the indicated event type
-        # This will also set per-file statistics on the file object sent
+        # Process the file according to the indicated event type.
+        # This will also set per-file statistics on the file object sent.
         if event_type == EventType.CENTRAL_NOTICE:
             file.sample_rate = log_file_manager.sample_rate(
                 file.filename,
@@ -108,6 +147,7 @@ def consume_events(
         file.status = LogFileStatus.CONSUMED
         db.log_file_mapper.save( file )
 
+        # Increment stats with results for this file.
         stats.increment( 'consumed_files', 1 )
         stats.increment( 'consumed_events', file.consumed_events )
         stats.increment( 'ignored_events',  file.ignored_events )
@@ -118,6 +158,13 @@ def consume_events(
 
 
 def purge_incomplete( event_type, db_settings ):
+    """Purge event data and file records for files with processing status.
+
+    :param fruec.event_type.EventType event_type: The type of events to consume.
+    :param dict db_settings: A dictionary with database settings.
+    :returns fruec.stats.StatCollection
+    """
+
     _logger.debug( 'Purging data and file records for files with processing status.' )
     db.connect( **db_settings )
     stats = StatCollection()
@@ -206,13 +253,17 @@ def _process_lp_file( file, lp_max_batch, default_str_validation_regex ):
 
             continue
 
-        # Ignore events from declared bots
+        # Ignore events from declared bots or from projects not in
+        # _CONSUMIBLE_LP_PROJECT_IDENTIFIERS (as per legacy).
         if ( event.bot or
             ( event.project_identifier not in _CONSUMIBLE_LP_PROJECT_IDENTIFIERS ) ):
             file.ignored_events += 1
             continue
 
+        # Add the event to the write step. If we've reached the batch limit, this will
+        # also flush events to the DB.
         write_step.add_event_and_maybe_write( event )
         file.consumed_events += 1
 
+    # Write any remaining events in the step.
     write_step.write_events_not_yet_written()

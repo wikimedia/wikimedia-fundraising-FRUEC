@@ -3,6 +3,8 @@ import logging
 from fruec.event import Event
 from fruec import language
 
+# Fields to extract and set using the same name in the raw event and in attributes on this
+# object, and to apply default string validation to.
 _STR_FIELDS_DEFAULT_VALIDATE = [
     'utm_source',
     'utm_campaign',
@@ -22,6 +24,7 @@ _STR_FIELDS_DEFAULT_VALIDATE = [
 _DEFAULT_COUNTRY_CODE = 'XX'
 _DEFAULT_LANGUAGE_CODE = 'en'
 
+# Setup for assembling the landingpage field, based on multiple fields in the raw event.
 _LP_SPECIAL_PAGE = 'Special:LandingPage'
 _LP_COMPONENT_FIELDS = [
     'template',
@@ -49,8 +52,19 @@ _logger = logging.getLogger( __name__ )
 
 
 class LPEvent( Event ):
+    """A LandingPage event"""
 
     def __init__( self, json_string, default_str_validation_regex ):
+        """Create a LandingPage event.
+
+        :param str json_string: Raw JSON with event data, as extracted from the log file.
+        :param str default_str_validation_regex: Regex to use to validate string fields by
+            default (used for string fields that don't have more specific validation
+            requirements).
+        """
+
+        # The parent constructor parses the JSON and validates and sets fields common
+        # to both event types.
         super().__init__( json_string, default_str_validation_regex )
 
         # Bow out if data was marked as invalid by the parent class

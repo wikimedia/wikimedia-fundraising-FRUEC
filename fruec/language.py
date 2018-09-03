@@ -12,6 +12,12 @@ def is_valid_language_code( language_code ):
 class Language:
 
     def __init__( self, language_code ):
+        """Create a Language object.
+
+        :param str language_code: Code for the language, as received from the event.
+        """
+
+
         if not is_valid_language_code( language_code):
             raise ValueError( 'Invalid language code: {}'.format( language_code ) )
 
