@@ -9,12 +9,12 @@ CREATE TABLE `files` (
   status           ENUM('processing', 'consumed') NOT NULL,
   consumed_events  INT           UNSIGNED DEFAULT NULL,
   ignored_events   INT           UNSIGNED DEFAULT NULL,
-  invalid_events    INT           UNSIGNED DEFAULT NULL,
+  invalid_events   INT           UNSIGNED DEFAULT NULL,
 
   PRIMARY KEY (id),
   UNIQUE KEY (filename),
-  INDEX (timestamp),
-  INDEX (status)
+  INDEX timestamp_index (timestamp),
+  INDEX status_index (status)
 ) DEFAULT CHARACTER SET = utf8 ENGINE = InnoDB;
 
 CREATE TABLE `project` (
@@ -60,7 +60,7 @@ CREATE TABLE `bannerimpressions` (
   INDEX (project_id),
   INDEX (language_id),
   INDEX (country_id),
-  INDEX (file_id)
+  INDEX file_id_index (file_id)
 ) DEFAULT CHARACTER SET = utf8 ENGINE = InnoDB;
 
 CREATE TABLE `landingpageimpression_raw` (
@@ -86,7 +86,7 @@ CREATE TABLE `landingpageimpression_raw` (
   INDEX (project_id),
   INDEX (language_id),
   INDEX (country_id),
-  INDEX (file_id)
+  INDEX file_id_index (file_id)
 ) DEFAULT CHARACTER SET = utf8 ENGINE = InnoDB;
 
 CREATE TABLE `donatewiki_unique` (
@@ -100,5 +100,5 @@ CREATE TABLE `donatewiki_unique` (
 
   PRIMARY KEY (id),
   UNIQUE KEY utm_source (utm_source, contact_id),
-  INDEX (file_id)
+  INDEX file_id_index (file_id)
 ) DEFAULT CHARACTER SET = utf8 ENGINE = InnoDB;
