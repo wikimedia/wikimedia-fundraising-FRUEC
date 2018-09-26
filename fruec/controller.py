@@ -220,7 +220,7 @@ def _process_cn_file( file, detail_languages, detail_projects_regex,
                 continue
 
             # Ignore events from declared bots, previews or banner not shown
-            if event.bot or event.testing or ( not event.banner_shown ):
+            if event.bot or ( not event.banner_shown ):
                 file.ignored_events += 1
                 continue
 

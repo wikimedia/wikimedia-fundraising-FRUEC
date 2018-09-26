@@ -36,7 +36,6 @@ class CNEvent( Event ):
         if self.valid == False:
             return
 
-        self.testing = self._data[ 'event' ].get( 'testingBanner', False )
         self.banner_shown = self._data[ 'event' ][ 'statusCode' ] == '6' # Received as string
 
         # uselang is required by the EventLogging schema, so we can be sure it's there.
@@ -63,13 +62,6 @@ class CNEvent( Event ):
         self.campaign = self._data[ 'event' ].get( 'campaign' )
         if ( self.campaign is not None ) and not self._is_str_default_valid( self.campaign ):
             _logger.debug( 'Invalid campaign: {}'.format( self.campaign ) )
-            self.valid = False
-            return
-
-        # Something is wrong if this isn't a banner preview (testing) but there's no
-        # campaign
-        if ( not self.campaign ) and ( not self.testing ):
-            _logger.debug( 'No campaign found, and not a banner preview.' )
             self.valid = False
             return
 
