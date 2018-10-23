@@ -12,7 +12,7 @@ import logging
 from fruec.log_file import LogFileStatus
 from fruec.event_type import EventType
 from fruec.stats import StatCollection
-from fruec import log_file_manager, db, event
+from fruec import log_file_manager, db
 
 _CONSUMIBLE_LP_PROJECT_IDENTIFIERS = [ 'donatewiki' ]
 
