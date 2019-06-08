@@ -1,9 +1,9 @@
 # Database settings
 db_settings:
-  user: 'user'
-  password: 'pw'
+  user: 'fruec'
+  password: 'pwd_for_fruec'
   host: 'localhost'
-  database: 'fruec_testing'
+  database: 'fruec'
 
 # Default directories to load log files from (absent the --directory command-line option).
 # Log files in sub-directories will also be consumed.
