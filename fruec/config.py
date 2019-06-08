@@ -36,6 +36,7 @@ def _load():
         try:
             _actually_load( filename_to_try )
             config_file_found = True
+            break
 
         except FileNotFoundError:
             continue
