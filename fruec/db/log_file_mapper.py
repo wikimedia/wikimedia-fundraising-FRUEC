@@ -107,6 +107,7 @@ def new(
 
     :param str filename: Unique filename (without directory).
     :param str directory: Directory the file was read from.
+    :param datetime.datetime time: Log file time, as extracted from filename.
     :param fruec.event_type.EventType event_type: The type of events in the log file.
     :param fruec.log_file.LogFileStatus status: The processing status of the log file.
     :param float sample_rate: Server-side sample rate for events in the file.

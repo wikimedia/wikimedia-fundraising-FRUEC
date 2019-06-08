@@ -44,6 +44,7 @@ def consume_events(
     :param str timestamp_format_in_filenames: Format of timestamps in filenames (as used
         by datatime.strptime()).
     :param str extract_timestamp_regex: Regex to extract timestamps from filenames.
+    :param str extract_sample_rate_regex: Regex to extract sample rate from filenames.
     :param str directory: The root directory to look for files in (subdirectories will
         also be included).
     :param str file_glob: A filesystem glob to select log files.

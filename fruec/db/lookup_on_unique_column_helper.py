@@ -20,7 +20,7 @@ def get_or_new( unique_column_val, cache_key, get_sql, insert_sql, new_obj_callb
     :param str cache_key: Cache key for the object.
     :param str get_sql: SQL to retrieve object data from the database.
     :param str insert_sql: SQL to insert a row for this object in the database.
-    :param function new_object_callback: Function that returns a new object of the
+    :param function new_obj_callback: Function that returns a new object of the
         appropriate type, with the unique field's value already set.
     """
 

@@ -80,7 +80,7 @@ def sample_rate( filename, extract_sample_rate_regex ):
     """Extract sample rate data from a filename.
 
     :param str filename: The filename with the sample rate data.
-    :param str extract_timestamp_regex: Regex to extract timestamps from filenames.
+    :param str extract_sample_rate_regex: Regex to extract sampple rate from filenames.
     :returns int
     """
 
