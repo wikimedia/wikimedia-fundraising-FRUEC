@@ -2,7 +2,7 @@ import re
 
 _LANGUAGE_CODE_LIMIT = 24
 
-validation_pattern = re.compile( '^[a-z\-_]+$' )
+validation_pattern = re.compile( '^[a-z]+([_-][A-Z0-9]+)?$' )
 
 def is_valid_language_code( language_code ):
     return ( ( len( language_code ) <= _LANGUAGE_CODE_LIMIT ) and
@@ -16,7 +16,6 @@ class Language:
 
         :param str language_code: Code for the language, as received from the event.
         """
-
 
         if not is_valid_language_code( language_code):
             raise ValueError( 'Invalid language code: {}'.format( language_code ) )
