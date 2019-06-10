@@ -1,17 +1,15 @@
 """This module and its submodules provide database-related logic. No other code should
 touch the database directly.
-This module provides functions for database connection, and a cache for objects in the
-database (used by the mapper submodules).
+This module provides functions for the database connection.
 """
 
 
 import mysql.connector as mariadb
-from . import ( log_file_mapper, cn_event_aggregator, lookup_on_unique_column_helper,
-    lp_event_writer )
+from . import ( log_file_mapper, cn_event_aggregator, lp_event_writer,
+    lookup_on_unique_column_helper, object_cache )
 
 
 connection = None
-_object_cache = {}
 
 
 def connect( user, password, host, database ):
@@ -36,15 +34,3 @@ def close():
 
     connection.close()
     connection = None
-
-
-def get_cached_object( key ):
-    return _object_cache.get( key, None )
-
-
-def set_object_in_cache( key, obj ):
-    _object_cache[ key ] = obj
-
-
-def object_in_cache( key ):
-    return key in _object_cache

@@ -25,7 +25,7 @@ def get_or_new( unique_column_val, cache_key, get_sql, insert_sql, new_obj_callb
     """
 
     # Check the object cache. If a corresponding object is there, just return that.
-    obj = db.get_cached_object( cache_key )
+    obj = db.object_cache.get_obj( cache_key )
     if obj:
         return obj
 
@@ -61,6 +61,6 @@ def get_or_new( unique_column_val, cache_key, get_sql, insert_sql, new_obj_callb
     cursor.close()
 
     # Add the object to the cache.
-    db.set_object_in_cache( cache_key, obj )
+    db.object_cache.set_obj( cache_key, obj )
 
     return obj

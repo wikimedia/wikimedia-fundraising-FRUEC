@@ -82,7 +82,7 @@ def known( filename ):
     """
 
     # We assume that if a LogFile object is in the cache, a corresponding row is in the db
-    if db.object_in_cache( _make_cache_key( filename ) ):
+    if db.object_cache.is_cached( _make_cache_key( filename ) ):
         return True
 
     cursor = db.connection.cursor()
@@ -145,7 +145,7 @@ def new(
     cursor.close()
 
     # Put the file object in the cache
-    db.set_object_in_cache( _make_cache_key( filename ), file )
+    db.object_cache.set_obj( _make_cache_key( filename ), file )
 
     return file
 
@@ -159,7 +159,7 @@ def save( file ):
     """
 
     # Sanity check: file should already be in the cache
-    if db.get_cached_object( _make_cache_key( file.filename ) ) != file:
+    if db.object_cache.get_obj( _make_cache_key( file.filename ) ) != file:
         raise RuntimeError(
             ( 'Attempting to save an existing LogFile object for {}, but it\'s not in the '
             'object cache.' ).format( file.filename )
