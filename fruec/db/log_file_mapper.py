@@ -7,7 +7,7 @@ from fruec.log_file import LogFile
 from fruec import db
 
 
-# SQl templates
+# SQL templates
 _FILE_KNOWN_SQL = 'SELECT EXISTS (SELECT 1 FROM files WHERE filename = %s)'
 
 _INSERT_FILE_SQL = (

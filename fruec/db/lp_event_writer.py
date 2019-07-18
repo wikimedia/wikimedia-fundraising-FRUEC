@@ -9,7 +9,7 @@ from fruec.db import project_mapper, language_mapper, country_mapper
 from fruec import db
 
 
-# SQl templates for inserting a row in the landingpageimpression_raw table
+# SQL templates for inserting a row in the landingpageimpression_raw table
 _INSERT_LP_RAW_SQL = (
     'INSERT INTO landingpageimpression_raw ('
     '  timestamp,'

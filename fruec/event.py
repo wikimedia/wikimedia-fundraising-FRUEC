@@ -67,7 +67,7 @@ class Event:
 
 
     def _truncate_fields( self, field_names_and_limits ):
-        """Silently truncate the fields of this event are indicated. (We only log a
+        """Silently truncate the fields of this event as indicated. (We only log a
         warning when an field is truncated, but the event remains valid.)
 
         :param dict field_names_and_limits: A dictionary where the keys are field names
