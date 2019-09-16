@@ -7,9 +7,8 @@ events from log files and loads related data into a MariaDB database.
 Usage
 -----
 
-Copy `config-example.yaml` to `config.yaml` and adjust settings as appropriate.
-Scripts look for a configuration file in the working directory or in
-`/etc/fruec`.
+Copy `fruec_config_example.yaml` to `fruec.yaml` and adjust settings as appropriate.
+Script looks for `fruec.yaml` in the working directory or `/etc/fruec.yaml`.
 
 Command-line script is `bin/fruec`. Run it with --help for details about command-line
 options. See also inline comments in `config-example.yaml` and sample log files
