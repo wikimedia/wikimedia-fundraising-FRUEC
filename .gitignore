@@ -10,7 +10,7 @@
 /*.egg-info
 
 # Actual config file
-config.yaml
+fruec.yaml
 
 # Actual drop_tables.sql
 drop_tables.sql

@@ -47,7 +47,7 @@ if __name__ == '__main__':
 
     config_kwargs = {
         'help': """Configuration file to use. (Without this option, the script looks for a
-            configuration file in the working directory and in /etc/fruec/.)"""
+            configuration file called fruec.yaml in the working directory and in /etc/.)"""
     }
 
     debug_kwargs = {
