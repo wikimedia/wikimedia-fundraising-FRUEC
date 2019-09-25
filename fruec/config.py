@@ -2,8 +2,12 @@
 
 
 import yaml
+import os
 
-from fruec import DEFAULT_CONFIG_FILENAMES
+from fruec import CONFIG_FILENAME
+
+directories_to_try = [ os.path.dirname( os.path.realpath( __file__ ) ) + '/../', '/etc/' ]
+"""Directories to search for configuration file."""
 
 filename = None
 """Non-default configuration file to load. (To load from default locations, leave this
@@ -32,9 +36,10 @@ def _load():
         return
 
     config_file_found = False
-    for filename_to_try in DEFAULT_CONFIG_FILENAMES:
+    for directory_to_try in directories_to_try:
+        print( directory_to_try + CONFIG_FILENAME )
         try:
-            _actually_load( filename_to_try )
+            _actually_load( directory_to_try + CONFIG_FILENAME )
             config_file_found = True
             break
 
