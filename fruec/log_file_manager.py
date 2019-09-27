@@ -112,7 +112,7 @@ def lines( file ):
     if _gzip_filename_pattern.match( file.filename ):
         with gzip.open( filename ) as stream:
             for l in stream:
-                yield ( l, line_no )
+                yield ( l.decode( 'utf-8' ), line_no )
                 line_no += 1
 
     else:
