@@ -137,10 +137,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Do stuff with options available to all commands
+    setup_logging( args.debug )
     config.filename = args.config # Will be None if the command-line option was not set
     cfg = config.get()
-
-    setup_logging( args.debug )
 
     if args.event_type == 'centralnotice':
         event_type = EventType.CENTRAL_NOTICE

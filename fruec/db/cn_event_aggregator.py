@@ -178,7 +178,7 @@ class CNAggregationStep:
         # Cell IDs uniquely identify combinations of values used for aggregate counts
         cell_id = _data_cell_id( time, banner, campaign, project, language, country )
 
-        # Get the existing cell for this combination of values, or make a new one 
+        # Get the existing cell for this combination of values, or make a new one
         cell = self._data.get( cell_id )
         if not cell:
             cell = _CNDataCell( time, banner, campaign, project, language, country )
