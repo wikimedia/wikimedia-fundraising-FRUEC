@@ -1,8 +1,10 @@
 """Module to retrieve configuration settings."""
 
 
-import yaml
 import os
+
+import logging
+import yaml
 
 from fruec import CONFIG_FILENAME
 
@@ -14,6 +16,8 @@ filename = None
 set to None.)"""
 
 _config = None
+
+_logger = logging.getLogger( __name__ )
 
 
 def get():
@@ -37,7 +41,6 @@ def _load():
 
     config_file_found = False
     for directory_to_try in directories_to_try:
-        print( directory_to_try + CONFIG_FILENAME )
         try:
             _actually_load( directory_to_try + CONFIG_FILENAME )
             config_file_found = True
@@ -54,3 +57,5 @@ def _actually_load( actual_filename ):
     global _config
     with open( actual_filename, 'r' ) as stream:
         _config = yaml.load( stream )
+
+    _logger.debug( 'Using configuraiton file: {}'.format( actual_filename ) )
