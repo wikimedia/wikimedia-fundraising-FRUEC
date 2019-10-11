@@ -11,9 +11,9 @@ from fruec.db import project_mapper, language_mapper, country_mapper
 from fruec import db
 
 
-# SQL template for inserting a row in bannerimpressions. (Each row is a "data cell" with
-# aggregated data from one or more CentralNotice events).
-_INSERT_DATA_CELL_SQL = (
+# SQL template for inserting or updating a row in bannerimpressions. (Each row is a "data
+# cell" with aggregated data from one or more CentralNotice events).
+_INSERT_OR_UPDATE_DATA_CELL_SQL = (
     'INSERT INTO bannerimpressions ('
     '  timestamp,'
     '  banner,'
@@ -21,8 +21,7 @@ _INSERT_DATA_CELL_SQL = (
     '  project_id,'
     '  language_id,'
     '  country_id,'
-    '  count,'
-    '  file_id'
+    '  count'
     ') '
     'VALUES ('
     '  %(timestamp)s,'
@@ -31,24 +30,67 @@ _INSERT_DATA_CELL_SQL = (
     '  %(project_id)s,'
     '  %(language_id)s,'
     '  %(country_id)s,'
-    '  %(count)s,'
-    '  %(file_id)s'
+    '  %(count)s'
+    ') '
+    'ON DUPLICATE KEY'
+    '  update count=count+%(count)s'
+)
+
+# SQL template for inserting a row in the link table files_and_bannerimpressions.
+_INSERT_FILE_LINK_SQL = (
+    'INSERT INTO files_and_bannerimpressions ('
+    '  file_id,'
+    '  banner_imp_cell_id,'
+    '  count'
+    ' )'
+    'VALUES ('
+    '  %(file_id)s,'
+    '  %(banner_imp_cell_id)s,'
+    '  %(count)s'
     ')'
 )
 
-# SQL template for purging bannerimpressions rows from files in a state of incomplete
-# processing.
-_DELETE_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL = (
+# SQL for subtracting data cellc counts due to files with procesing status
+_SUBTRACT_COUNTS_FROM_CELLS_FOR_FILES_WITH_PROCESSING_STATUS_SQL = (
+    'UPDATE'
+    '  bannerimpressions bi,'
+    '  ('
+    '    SELECT'
+    '      banner_imp_cell_id,'
+    '      count'
+    '    FROM'
+    '      files_and_bannerimpressions'
+    '    INNER JOIN'
+    '      files'
+    '    ON'
+    '      files_and_bannerimpressions.file_id = files.id'
+    '    WHERE'
+    '     files.status  = \'processing\''
+    '  ) links '
+    'SET'
+    '  bi.count = bi.count - links.count '
+    'WHERE'
+    '  links.banner_imp_cell_id = bi.id'
+)
+
+# SQL for purging files_and_bannerimpressions rows from files in a state of
+# incomplete processing.
+_DELETE_FILE_LINKS_FROM_FILES_WITH_PROCESSING_STATUS_SQL = (
     'DELETE'
-    '  bannerimpressions '
+    '  files_and_bannerimpressions '
     'FROM'
-    '  bannerimpressions '
+    '  files_and_bannerimpressions '
     'INNER JOIN'
     '  files '
     'ON'
-    '  bannerimpressions.file_id = files.id '
+    '  files_and_bannerimpressions.file_id = files.id '
     'WHERE'
     '  files.status  = \'processing\''
+)
+
+# SQL to remove data cells with zero counts.
+_DELETE_DATA_CELLS_WITH_ZERO_COUNTS_SQL = (
+    'DELETE FROM bannerimpressions WHERE count = 0'
 )
 
 # Strings for languages and projects to be grouped together, as per legacy.
@@ -91,20 +133,26 @@ def new_cn_aggregation_step( file, detail_languages, detail_projects_regex ):
 
 
 def delete_with_processing_status():
-    """Delete from the bannerimpressions table all rows from events from files with
+    """Remove from the bannerimpressions table all counts from events from files with
     processing status.
     """
     cursor = db.connection.cursor()
+
     try:
-        cursor.execute( _DELETE_DATA_FROM_FILES_WITH_PROCESSING_STATUS_SQL )
+        cursor.execute( _SUBTRACT_COUNTS_FROM_CELLS_FOR_FILES_WITH_PROCESSING_STATUS_SQL )
+        cursor.execute( _DELETE_DATA_CELLS_WITH_ZERO_COUNTS_SQL )
+        cursor.execute( _DELETE_FILE_LINKS_FROM_FILES_WITH_PROCESSING_STATUS_SQL )
+        links_removed = cursor.rowcount
+
     except mariadb.Error as e:
         db.connection.rollback()
         cursor.close()
         raise e
 
     db.connection.commit()
+
     cursor.close()
-    return cursor.rowcount
+    return links_removed
 
 
 def _get_other_project():
@@ -143,6 +191,7 @@ class CNAggregationStep:
         :param str detail_projects_regex: Regex to match projects to separate out in
             data aggregation.
         """
+
         self._detail_languages = detail_languages
         self._detail_projects_pattern = re.compile( detail_projects_regex )
         self._sample_rate_multiplier = 100 / file.sample_rate
@@ -153,7 +202,7 @@ class CNAggregationStep:
     def add_event( self, event ):
         """Add an event to aggregate in this step.
 
-        :param fruec.lp_event.LPEvent event
+        :param fruec.cn_event.CNEvent event
         """
 
         # Grouping less-common projects and languages
@@ -197,15 +246,28 @@ class CNAggregationStep:
         for cell in self._data.values():
 
             try:
-                cursor.execute( _INSERT_DATA_CELL_SQL, {
+                # Insert a new data cell, or if an identical one exists from a
+                # different file, update with a sum of this count and the previous one.
+                # Cells with counts from events from multiple files are possible because
+                # sometimes there can be some overlap in timestamps of events at the end
+                # of one file and the beginning of the next one.
+                cursor.execute( _INSERT_OR_UPDATE_DATA_CELL_SQL, {
                     'timestamp': cell.time,
                     'banner': cell.banner,
                     'campaign': cell.campaign,
                     'project_id': cell.project.db_id,
                     'language_id': cell.language.db_id,
                     'country_id': cell.country.db_id,
-                    'count': cell.event_count,
-                    'file_id': self._file.db_id
+                    'count': cell.event_count
+                } )
+
+                # Update the link table to remember how many of the cell's counts came
+                # from the file we're processing.
+                banner_imp_cell_id = cursor.lastrowid
+                cursor.execute( _INSERT_FILE_LINK_SQL, {
+                    'file_id': self._file.db_id,
+                    'banner_imp_cell_id': banner_imp_cell_id,
+                    'count': cell.event_count
                 } )
 
             except mariadb.Error as e:

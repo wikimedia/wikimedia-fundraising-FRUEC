@@ -172,7 +172,7 @@ def purge_incomplete( event_type, db_settings ):
 
     if event_type == EventType.CENTRAL_NOTICE:
         cells_deleted = db.cn_event_aggregator.delete_with_processing_status()
-        stats.new_stat( 'deleted', 'bannerimpressions rows deleted', cells_deleted )
+        stats.new_stat( 'deleted_or_updated', 'bannerimpressions rows deleted or updated', cells_deleted )
 
     elif event_type == EventType.LANDING_PAGE:
         ( lp_raw_del, dwu_del ) = db.lp_event_writer.delete_with_processing_status()

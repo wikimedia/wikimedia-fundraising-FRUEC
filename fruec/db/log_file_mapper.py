@@ -224,6 +224,7 @@ def delete_with_processing_status( event_type ):
     cursor = db.connection.cursor()
     try:
         cursor.execute( _DELETE_WITH_PROCESSING_STATUS_SQL, ( event_type.legacy_key, ) )
+        files_del = cursor.rowcount
     except mariadb.Error as e:
         db.connection.rollback()
         cursor.close()
@@ -231,7 +232,7 @@ def delete_with_processing_status( event_type ):
 
     db.connection.commit()
     cursor.close()
-    return cursor.rowcount
+    return files_del
 
 
 def _make_cache_key( filename ):

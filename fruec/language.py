@@ -2,7 +2,7 @@ import re
 
 _LANGUAGE_CODE_LIMIT = 24
 
-validation_pattern = re.compile( '^[a-z]+([_-][A-Z0-9]+)?$' )
+validation_pattern = re.compile( '^[a-z]+([_-][a-zA-Z0-9]+)?$' )
 
 def is_valid_language_code( language_code ):
     return ( ( len( language_code ) <= _LANGUAGE_CODE_LIMIT ) and

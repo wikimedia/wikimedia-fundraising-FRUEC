@@ -50,7 +50,6 @@ CREATE TABLE `bannerimpressions` (
   language_id     SMALLINT(3)   UNSIGNED DEFAULT NULL,
   country_id      SMALLINT(3)   UNSIGNED DEFAULT NULL,
   count           MEDIUMINT(11) DEFAULT 0,
-  file_id         INT(11)       UNSIGNED NOT NULL,
 
   PRIMARY KEY (id),
   UNIQUE KEY (timestamp, banner, campaign, project_id, language_id, country_id),
@@ -59,8 +58,19 @@ CREATE TABLE `bannerimpressions` (
   INDEX (campaign),
   INDEX (project_id),
   INDEX (language_id),
-  INDEX (country_id),
-  INDEX file_id_index (file_id)
+  INDEX (country_id)
+) DEFAULT CHARACTER SET = utf8 ENGINE = InnoDB;
+
+CREATE TABLE `files_and_bannerimpressions` (
+  id                  INT(11)       UNSIGNED AUTO_INCREMENT,
+  file_id             INT(11)       UNSIGNED NOT NULL,
+  banner_imp_cell_id  INT(11)       UNSIGNED NOT NULL,
+  count               MEDIUMINT(11) DEFAULT 0,
+
+  PRIMARY KEY (id),
+  UNIQUE KEY (file_id, banner_imp_cell_id),
+  INDEX file_id_index (file_id),
+  INDEX banner_imp_cell_id_index (banner_imp_cell_id)
 ) DEFAULT CHARACTER SET = utf8 ENGINE = InnoDB;
 
 CREATE TABLE `landingpageimpression_raw` (
