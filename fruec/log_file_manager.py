@@ -51,7 +51,13 @@ def file_infos( timestamp_format, extract_timestamp_regex, directory, file_glob,
 
             # Extract and parse timestamp from filename. This  will raise an error if the
             # timestamp in the filename is in the wrong format
-            fn_ts = extract_ts_pattern.search( base_fn ).group( 0 )
+            fn_ts_match = extract_ts_pattern.search( base_fn )
+            if fn_ts_match is None:
+                raise ValueError(
+                    'No timestamp found in filename {} in {}'.format( base_fn, directory )
+                )
+
+            fn_ts = fn_ts_match.group( 0 )
             fn_time = datetime.datetime.strptime( fn_ts, timestamp_format )
 
             # Duplicate filenames not allowed, regardless of directory
